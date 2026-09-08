@@ -1,9 +1,9 @@
 {
   "network": "Creditcoin CC3 Testnet",
   "chainId": 102031,
-  "paidline": "0xA682c66F28a897191018F528bd8a69F0c47E992E",
+  "paidline": "0x6e88109Cf1f9679FAB8Faf2eD9C8bbCD8566a2c7",
   "deployer": "0xd9EA8ff9654cF57820977663767707ce0db0B6C4",
-  "deployTx": "0x33e4435f337814d2c0d3d807a88954a481fa8c643c9eabb90bcde950a754ef08",
+  "deployTx": "0x04a9f2ad3b9150393860aaf6f57fa9736cd3ec5d71bbcc047b896319b79848ac",
   "sourceChainKey": 1,
   "explorer": "https://creditcoin-testnet.blockscout.com"
 }

@@ -103,6 +103,12 @@ contract Paidline is ASCBase {
         return _issued[merchant];
     }
 
+    /// @notice True after a remote payment has been matched and local value released.
+    /// @dev Unknown ids return false. Other contracts gate on this, not on our internals.
+    function isPaid(uint256 invoiceId) external view returns (bool) {
+        return invoices[invoiceId].status == Status.Paid;
+    }
+
     /// @notice Register what a remote payment must look like. Locks funds if value is sent.
     function createInvoice(
         uint256 chainKey,

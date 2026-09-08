@@ -8,11 +8,20 @@ Remote proof. Local action. Two assets. Not a bridge.
 
 ## Live
 
-Creditcoin CC3 testnet. Contract: [`0xA682c66F28a897191018F528bd8a69F0c47E992E`](https://creditcoin-testnet.blockscout.com/address/0xA682c66F28a897191018F528bd8a69F0c47E992E)
+Creditcoin CC3 testnet. Contract: [`0x6e88109Cf1f9679FAB8Faf2eD9C8bbCD8566a2c7`](https://creditcoin-testnet.blockscout.com/address/0x6e88109Cf1f9679FAB8Faf2eD9C8bbCD8566a2c7)
 
 Sellers connect a Creditcoin wallet and issue invoices on-chain. Buyers send USDC on Ethereum Sepolia, then confirm from a wallet or by pasting the hash. Paidline fetches an Attestcoin proof and calls `submitPayment`. The contract is the only thing that may mark an invoice paid.
 
 Each invoice is owned by the wallet that created it. Escrow, cancel, and the merchant list are isolated per merchant. Two open invoices cannot share the same chain, token, destination, and amount, so a transfer can only mean one invoice. The first matching payment settles it.
+
+## For other contracts
+
+Paidline is the checker. Other contracts do not talk to Attestcoin.
+
+- `isPaid(uint256 invoiceId) → bool` — true only after a matching remote payment has been verified and local value released. Unknown ids return false.
+- `InvoicePaid(invoiceId, sourceTxHash, releasedTo, localAmount)` — emitted in the same transaction as the release. Listen and react however you want.
+
+You do not need a second Paidline contract. Call the view, or subscribe to the event.
 
 ## How settlement works
 

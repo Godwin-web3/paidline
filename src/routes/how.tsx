@@ -72,6 +72,31 @@ function HowPage() {
         </p>
       </section>
 
+      <section className="mt-12 rounded-[28px] border border-line bg-surface p-6 sm:p-8">
+        <h2 className="font-display text-2xl tracking-tight">What other contracts call</h2>
+        <p className="mt-3 text-sm leading-relaxed text-muted">
+          Paidline is the checker. You do not integrate Attestcoin yourself. Ask whether an invoice
+          is paid, or listen when it becomes paid, then run your own logic.
+        </p>
+        <ul className="mt-5 space-y-4 text-sm leading-relaxed text-muted">
+          <li>
+            <p className="font-mono text-xs text-ink">isPaid(invoiceId) → bool</p>
+            <p className="mt-1">
+              True only after a matching remote payment has been verified and local value released.
+              Unknown invoices return false.
+            </p>
+          </li>
+          <li>
+            <p className="font-mono text-xs text-ink">InvoicePaid</p>
+            <p className="mt-1">
+              Emitted in the same transaction as the release. Indexed on invoice, source transaction,
+              and the wallet that received Creditcoin. A subscription, a DAO, anything else listens
+              and reacts however it wants.
+            </p>
+          </li>
+        </ul>
+      </section>
+
       <p className="mt-10 text-sm text-muted">
         <Link to="/new" className="underline decoration-line underline-offset-4">
           Issue an invoice
