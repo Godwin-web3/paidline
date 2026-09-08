@@ -29,14 +29,9 @@ export function SiteFooter() {
             <Link to="/how" className="hover:text-fg">
               How
             </Link>
-            <a
-              href={`${CREDITCOIN_EXPLORER}/address/${PAIDLINE_ADDRESS}`}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-fg"
-            >
-              Contract
-            </a>
+            <Link to="/source" className="hover:text-fg">
+              Source
+            </Link>
           </nav>
         </div>
         <p className="break-all font-mono text-xs text-faint">{PAIDLINE_ADDRESS}</p>

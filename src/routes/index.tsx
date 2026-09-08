@@ -266,6 +266,52 @@ function Home() {
         </div>
       </section>
 
+      <section className="border-b border-line">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <p className="text-xs uppercase tracking-wide text-muted">Start</p>
+          <h2 className="mt-3 font-display text-4xl tracking-tight sm:text-5xl">
+            One product. Three ways in.
+          </h2>
+          <div className="mt-10 grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
+            <Link to="/invoices" className="bg-surface p-6 transition-colors duration-150 hover:bg-raised sm:p-8">
+              <p className="font-mono text-xs text-faint">01</p>
+              <h3 className="mt-3 font-display text-2xl tracking-tight">The desk</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                Issue, watch, stamp. Status on the blotter. Connect the Creditcoin wallet you issue
+                from.
+              </p>
+            </Link>
+            <Link to="/pay" className="bg-surface p-6 transition-colors duration-150 hover:bg-raised sm:p-8">
+              <p className="font-mono text-xs text-faint">02</p>
+              <h3 className="mt-3 font-display text-2xl tracking-tight">Pay</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                Open the invoice number. Send USDC on Ethereum. The page watches. The contract
+                decides.
+              </p>
+            </Link>
+            <Link to="/source" className="bg-surface p-6 transition-colors duration-150 hover:bg-raised sm:p-8">
+              <p className="font-mono text-xs text-faint">03</p>
+              <h3 className="mt-3 font-display text-2xl tracking-tight">Source</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                Contract, chains, isPaid. Other contracts call the checker. They do not talk to the
+                prover.
+              </p>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-line">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+          <p className="text-xs uppercase tracking-wide text-muted">Before you begin</p>
+          <h2 className="mt-3 font-display text-3xl tracking-tight">Public testnet.</h2>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted">
+            Creditcoin CC3. USDC on Ethereum Sepolia. You stay in control of the wallet. Demo value
+            is not market value. Paidline does not extend credit and does not hold the USDC.
+          </p>
+        </div>
+      </section>
+
       <SiteFooter />
     </main>
   );

@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { BookOpen, FileText, Plus, Search } from "lucide-react";
+import { BookOpen, Code2, FileText, Plus, Search } from "lucide-react";
 import { useEffect } from "react";
 import { Mark, Wordmark } from "@/components/mark";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -13,6 +13,7 @@ const WORK_NAV = [
   { to: "/new", label: "Issue", icon: Plus },
   { to: "/pay", label: "Pay", icon: Search },
   { to: "/how", label: "How", icon: BookOpen },
+  { to: "/source", label: "Source", icon: Code2 },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -25,7 +26,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/new") ||
     pathname.startsWith("/invoice") ||
     pathname === "/pay" ||
-    pathname.startsWith("/how");
+    pathname.startsWith("/how") ||
+    pathname.startsWith("/source");
   const story = pathname === "/";
 
   useEffect(() => {
@@ -101,6 +103,7 @@ function isActive(to: (typeof WORK_NAV)[number]["to"], pathname: string) {
   if (to === "/invoices") return pathname === "/invoices" || pathname.startsWith("/invoice/");
   if (to === "/pay") return pathname === "/pay" || pathname.startsWith("/pay/");
   if (to === "/how") return pathname.startsWith("/how");
+  if (to === "/source") return pathname.startsWith("/source");
   return pathname === to;
 }
 
@@ -172,7 +175,7 @@ function NavLink({
   active,
   children,
 }: {
-  to: "/how" | "/invoices" | "/new" | "/pay";
+  to: "/how" | "/invoices" | "/new" | "/pay" | "/source";
   active: boolean;
   children: React.ReactNode;
 }) {

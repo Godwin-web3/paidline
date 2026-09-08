@@ -2,6 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PaperSlip } from "@/components/paper-slip";
+import { SettlementPath, type DeskPhase } from "@/components/settlement-path";
+import { StatusStrip } from "@/components/status-strip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,8 +48,16 @@ function Invoices() {
     return () => window.clearInterval(t);
   }, [address]);
 
-  const pending = invoices?.filter((i) => i.status === "unpaid").length ?? 0;
+  const pendingList = invoices?.filter((i) => i.status === "unpaid") ?? [];
+  const pending = pendingList.length;
   const paid = invoices?.filter((i) => i.status === "paid").length ?? 0;
+  const phase: DeskPhase = !address
+    ? "connect"
+    : !invoices || invoices.length === 0
+      ? "issue"
+      : pending > 0
+        ? "pay"
+        : "done";
 
   function onLookup(e: React.FormEvent) {
     e.preventDefault();
@@ -61,19 +71,29 @@ function Invoices() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-wide text-muted">Desk</p>
-          <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">The blotter</h1>
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
-            {address
-              ? `Invoices issued by ${shortAddr(address, 4)}. Pending until the contract matches a USDC transfer.`
-              : "Connect the Creditcoin wallet you issue from. The list is on-chain. This desk is yours."}
+          <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Settlement</h1>
+          <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted">
+            Issue on Creditcoin. Collect USDC on Ethereum. The contract is the only thing that may
+            mark an invoice paid. This is CC3 testnet. Demo funds have no market value.
           </p>
         </div>
-        <Link to="/new">
-          <Button>
-            <Plus className="size-4" strokeWidth={1.75} />
-            Issue invoice
-          </Button>
-        </Link>
+        {address ? (
+          <Link to="/new">
+            <Button>
+              <Plus className="size-4" strokeWidth={1.75} />
+              Issue invoice
+            </Button>
+          </Link>
+        ) : (
+          <Button onClick={() => void connect()}>Connect wallet</Button>
+        )}
+      </div>
+
+      <div className="mt-8">
+        <StatusStrip address={address} />
+      </div>
+      <div className="mt-4">
+        <SettlementPath phase={phase} pendingId={pendingList[0]?.id} />
       </div>
 
       {error ? <p className="mt-6 text-sm text-bad">{error}</p> : null}
@@ -81,6 +101,11 @@ function Invoices() {
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.85fr)]">
         <section>
+          <p className="mb-4 text-xs uppercase tracking-wide text-muted">
+            {address && invoices && invoices.length > 0
+              ? `${pending} pending · ${paid} paid`
+              : "Blotter"}
+          </p>
           {!ready ? (
             <p className="text-sm text-muted">Reading the desk…</p>
           ) : !address ? (
@@ -90,31 +115,26 @@ function Invoices() {
           ) : invoices && invoices.length === 0 ? (
             <EmptyDesk />
           ) : invoices ? (
-            <>
-              <p className="mb-4 text-xs uppercase tracking-wide text-muted">
-                {pending} pending · {paid} paid
-              </p>
-              <ul className="grid gap-4 sm:grid-cols-2">
-                {invoices.map((inv) => (
-                  <li key={inv.id}>
-                    <PaperSlip
-                      id={String(inv.id)}
-                      title={inv.title}
-                      amount={formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)}
-                      status={inv.status}
-                      to="/invoice/$id"
-                      meta={
-                        inv.status === "paid" && inv.paidTxHash
-                          ? shortAddr(inv.paidTxHash, 6)
-                          : inv.status === "unpaid" || inv.status === "expired"
-                            ? formatDue(inv.expiry)
-                            : inv.releaseLabel
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-            </>
+            <ul className="grid gap-4 sm:grid-cols-2">
+              {invoices.map((inv) => (
+                <li key={inv.id}>
+                  <PaperSlip
+                    id={String(inv.id)}
+                    title={inv.title}
+                    amount={formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)}
+                    status={inv.status}
+                    to="/invoice/$id"
+                    meta={
+                      inv.status === "paid" && inv.paidTxHash
+                        ? shortAddr(inv.paidTxHash, 6)
+                        : inv.status === "unpaid" || inv.status === "expired"
+                          ? formatDue(inv.expiry)
+                          : inv.releaseLabel
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
           ) : null}
         </section>
 
@@ -126,12 +146,12 @@ function Invoices() {
               className="aspect-square w-full object-cover"
             />
           </figure>
-          <form
-            onSubmit={onLookup}
-            className="rounded-xl border border-line bg-surface p-5"
-          >
-            <p className="text-xs uppercase tracking-wide text-muted">Open a payment</p>
-            <p className="mt-2 font-display text-2xl tracking-tight">Have a number?</p>
+          <form onSubmit={onLookup} className="rounded-xl border border-line bg-surface p-5">
+            <p className="text-xs uppercase tracking-wide text-muted">Step 02</p>
+            <p className="mt-2 font-display text-2xl tracking-tight">Pay by number</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted">
+              Buyer opens the sheet. Sends the exact USDC. This page watches.
+            </p>
             <div className="mt-4 flex gap-2">
               <Input
                 value={lookup}
@@ -146,19 +166,23 @@ function Invoices() {
             </div>
           </form>
           <div className="rounded-xl border border-line bg-surface p-5">
-            <p className="text-xs uppercase tracking-wide text-muted">Checker</p>
-            <p className="mt-2 font-display text-2xl tracking-tight">The contract</p>
+            <p className="text-xs uppercase tracking-wide text-muted">Before you begin</p>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              isPaid. InvoicePaid. Nothing else is allowed to mark an invoice settled.
+              Creditcoin CC3 testnet. USDC on Ethereum Sepolia. You stay in control of the wallet.
+              The contract, not this site, decides paid.
             </p>
-            <a
-              className="mt-3 inline-block break-all font-mono text-xs text-faint underline underline-offset-4"
-              href={`${CREDITCOIN_EXPLORER}/address/${PAIDLINE_ADDRESS}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {shortAddr(PAIDLINE_ADDRESS, 6)}
-            </a>
+            <Link to="/source" className="mt-3 inline-block text-sm underline decoration-line underline-offset-4">
+              Source and contract
+            </Link>
+            <p className="mt-3 break-all font-mono text-xs text-faint">
+              <a
+                href={`${CREDITCOIN_EXPLORER}/address/${PAIDLINE_ADDRESS}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {shortAddr(PAIDLINE_ADDRESS, 6)}
+              </a>
+            </p>
           </div>
         </aside>
       </div>
@@ -188,10 +212,10 @@ function DisconnectedDesk({ onConnect }: { onConnect: () => void }) {
         />
       </div>
       <div className="rounded-xl border border-line bg-surface p-5 sm:p-6">
-        <p className="font-display text-2xl tracking-tight">Connect to see your blotter</p>
+        <p className="font-display text-2xl tracking-tight">Connect the issuing wallet</p>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
-          Specimens above. Your invoices live on Creditcoin, keyed to the wallet that issued them.
-          Pending becomes paid only after the contract matches the transfer.
+          Specimens above so the desk is not empty. Your blotter is on Creditcoin, keyed to the
+          wallet that issued the invoices. Start at step 01.
         </p>
         <Button className="mt-5" onClick={onConnect}>
           Connect wallet
@@ -203,26 +227,20 @@ function DisconnectedDesk({ onConnect }: { onConnect: () => void }) {
 
 function EmptyDesk() {
   return (
-    <InvoiceBlank>
-      <p className="text-xs uppercase tracking-wide text-ink-muted">Blotter</p>
-      <h2 className="mt-2 font-display text-3xl tracking-tight text-ink">No invoices yet</h2>
-      <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
-        Issue one. Lock Creditcoin. Send the pay link. This desk fills with paper as they land, and
-        the stamp moves when the USDC is checked.
-      </p>
-      <Link to="/new" className="mt-6 inline-block">
-        <Button variant="ink">Issue the first invoice</Button>
-      </Link>
-    </InvoiceBlank>
-  );
-}
-
-function InvoiceBlank({ children }: { children: React.ReactNode }) {
-  return (
     <div className="relative overflow-hidden rounded-xl bg-paper p-6 text-ink shadow-sheet sm:p-8">
       <div aria-hidden className="pointer-events-none absolute inset-0 opacity-45 mix-blend-multiply paper-tooth" />
       <div aria-hidden className="pointer-events-none absolute inset-0 sheet-rules opacity-70" />
-      <div className="relative">{children}</div>
+      <div className="relative">
+        <p className="text-xs uppercase tracking-wide text-ink-muted">Step 01</p>
+        <h2 className="mt-2 font-display text-3xl tracking-tight text-ink">Issue the first invoice</h2>
+        <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
+          Name the work. Set the USDC. Lock Creditcoin. You get a number and a pay link. Then this
+          blotter has paper on it.
+        </p>
+        <Link to="/new" className="mt-6 inline-block">
+          <Button variant="ink">Write the invoice</Button>
+        </Link>
+      </div>
     </div>
   );
 }
