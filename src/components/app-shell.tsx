@@ -45,26 +45,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </TopBar>
         ) : null}
         {story ? (
-          <TopBar>
-            <nav className="flex flex-wrap items-center gap-1">
-              <a
-                href="/#product"
-                className="inline-flex min-h-11 items-center rounded-md px-3 text-sm text-muted transition-colors duration-150 hover:text-fg"
-              >
-                Product
-              </a>
-              <NavLink to="/how" active={pathname.startsWith("/how")}>
-                How
-              </NavLink>
-              <NavLink to="/invoices" active={false}>
-                Workspace
-              </NavLink>
-            </nav>
-            <Link to="/new">
-              <ButtonGhost>Issue</ButtonGhost>
-            </Link>
-            <ThemeToggle />
-          </TopBar>
+          <header className="relative z-10 border-b border-line bg-bg">
+            <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+              <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 shrink-0 items-center">
+                <Wordmark compact />
+              </Link>
+              <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+                <Link
+                  to="/how"
+                  className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline-flex"
+                >
+                  How
+                </Link>
+                <Link to="/invoices">
+                  <span className="inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg transition-opacity duration-150 hover:opacity-90">
+                    Open desk
+                  </span>
+                </Link>
+                <ThemeToggle />
+              </div>
+            </div>
+          </header>
         ) : null}
         {work ? (
           <header className="relative z-10 border-b border-line bg-bg md:hidden">
@@ -188,10 +189,3 @@ function NavLink({
   );
 }
 
-function ButtonGhost({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex min-h-11 items-center rounded-md border border-line px-3 text-sm text-fg transition-colors duration-150 hover:bg-raised">
-      {children}
-    </span>
-  );
-}

@@ -24,7 +24,7 @@ export function SiteFooter() {
               Pay
             </Link>
             <Link to="/invoices" className="hover:text-fg">
-              Workspace
+              Desk
             </Link>
             <Link to="/how" className="hover:text-fg">
               How

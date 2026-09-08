@@ -32,27 +32,27 @@ function Home() {
         <div className="absolute inset-0 hero-scrim" />
         <div className="relative mx-auto flex min-h-[88svh] max-w-6xl flex-col justify-end px-4 pb-14 pt-24 sm:px-6 sm:pb-20">
           <p className="text-xs uppercase tracking-wide text-hero-muted">The assay for a payment</p>
-          <h1 className="mt-4 max-w-3xl font-display text-5xl leading-[0.95] tracking-tight text-hero sm:text-7xl lg:text-8xl">
+          <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[0.95] tracking-tight text-hero sm:text-6xl lg:text-8xl">
             A transfer is not a paid invoice.
             <span className="mt-3 block italic">Not until the contract says so.</span>
           </h1>
-          <p className="mt-6 max-w-lg text-base leading-relaxed text-hero-muted">
+          <p className="mt-6 max-w-lg text-sm leading-relaxed text-hero-muted sm:text-base">
             A USDC transfer on Ethereum is not a paid invoice on Creditcoin. Not until a contract
             reads that transaction, matches it, and says so. No company in the middle is allowed to
             report the fact.
           </p>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link to="/new">
+            <Link to="/invoices">
               <Button size="lg" className="w-full sm:w-auto">
-                Create an invoice
+                Open the desk
                 <ArrowRight className="size-4" strokeWidth={1.75} />
               </Button>
             </Link>
-            <a href="#product">
+            <Link to="/how">
               <Button size="lg" variant="ghost" className="w-full border-hero/30 text-hero sm:w-auto">
-                How two people use it
+                How it works
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
