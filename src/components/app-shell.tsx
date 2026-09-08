@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { Wordmark } from "@/components/mark";
 import { WalletButton } from "@/components/wallet-button";
 import { useSession } from "@/lib/paidline/session";
 import { cn } from "@/lib/utils";
@@ -11,7 +12,7 @@ const PUBLIC_NAV = [
 
 const SELLER_NAV = [
   { to: "/invoices", label: "Invoices" },
-  { to: "/new", label: "New" },
+  { to: "/new", label: "Issue" },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -28,13 +29,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-bg text-fg">
-      <header className="relative z-10 border-b border-line">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-4 sm:max-w-5xl sm:px-6">
-          <Link to="/" className="font-display text-xl tracking-tight">
-            Paidline
+      <div className="grain" />
+      <header className="relative z-10 border-b border-line bg-bg">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link to="/" aria-label="Paidline home" className="min-h-11 inline-flex items-center">
+            <Wordmark />
           </Link>
           {buyer ? (
-            <p className="text-xs uppercase tracking-[0.16em] text-muted">Pay</p>
+            <p className="text-xs uppercase tracking-wide text-muted">Pay</p>
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
               <nav className="flex flex-wrap items-center gap-1">
@@ -48,7 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       key={item.to}
                       to={item.to}
                       className={cn(
-                        "rounded-[10px] px-3 py-2 text-sm transition-colors duration-150",
+                        "inline-flex min-h-11 items-center rounded-md px-3 text-sm transition-colors duration-150",
                         active ? "bg-raised text-fg" : "text-muted hover:text-fg",
                       )}
                     >

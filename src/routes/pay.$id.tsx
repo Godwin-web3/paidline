@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
+import { InvoiceSheet, SheetMeta } from "@/components/invoice-sheet";
 import { SEPOLIA_EXPLORER, SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { confirmPayment, getInvoice } from "@/lib/paidline/invoices";
 import type { InvoiceWire } from "@/lib/paidline/types";
@@ -93,38 +94,43 @@ function BuyerPay() {
 
   return (
     <main className="mx-auto max-w-md px-4 py-10 sm:py-16">
-      <p className="text-xs uppercase tracking-[0.18em] text-muted">Invoice #{invoice.id}</p>
-      <h1 className="mt-3 font-display text-4xl tracking-tight">{invoice.title}</h1>
-      <p className="mt-2 text-sm text-muted">Send USDC on Ethereum (Sepolia). That is the whole job.</p>
-
-      <section className="mt-8 rounded-[28px] border border-line bg-surface p-6">
-        <p className="text-xs uppercase tracking-wide text-faint">Amount</p>
-        <p className="mt-1 font-display text-5xl tabular-nums tracking-tight">
-          {amount}
-          <span className="ml-2 text-xl text-muted">USDC</span>
+      <InvoiceSheet className="p-6 sm:p-8">
+        <p className="text-xs uppercase tracking-wide text-ink-muted">Invoice #{invoice.id}</p>
+        <h1 className="mt-3 font-display text-4xl tracking-tight text-ink">{invoice.title}</h1>
+        <p className="mt-2 text-sm text-ink-muted">
+          Send USDC on Ethereum (Sepolia). That is the whole job.
         </p>
-        <p className="mt-6 text-xs uppercase tracking-wide text-faint">Send to</p>
-        <p className="mt-1 break-all font-mono text-sm">{invoice.sourceRecipient}</p>
-        <button
-          type="button"
-          className="mt-2 min-h-11 text-xs text-muted underline underline-offset-4"
-          onClick={() => {
-            void copyText(invoice.sourceRecipient).then((ok) => {
-              if (ok) {
-                setCopied(true);
-                window.setTimeout(() => setCopied(false), 1400);
-              }
-            });
-          }}
-        >
-          {copied ? "Address copied" : "Copy address"}
-        </button>
-        <p className="mt-6 text-xs uppercase tracking-wide text-faint">You receive</p>
-        <p className="mt-1 text-sm">{invoice.releaseLabel}</p>
-      </section>
+
+        <dl className="mt-8 grid gap-5">
+          <SheetMeta label="Amount">
+            <span className="font-display text-5xl tabular-nums tracking-tight">
+              {amount}
+              <span className="ml-2 text-xl text-ink-muted">USDC</span>
+            </span>
+          </SheetMeta>
+          <SheetMeta label="Send to">
+            <span className="break-all font-mono text-sm">{invoice.sourceRecipient}</span>
+            <button
+              type="button"
+              className="mt-2 min-h-11 text-xs text-ink-muted underline underline-offset-4"
+              onClick={() => {
+                void copyText(invoice.sourceRecipient).then((ok) => {
+                  if (ok) {
+                    setCopied(true);
+                    window.setTimeout(() => setCopied(false), 1400);
+                  }
+                });
+              }}
+            >
+              {copied ? "Address copied" : "Copy address"}
+            </button>
+          </SheetMeta>
+          <SheetMeta label="You receive">{invoice.releaseLabel}</SheetMeta>
+        </dl>
+      </InvoiceSheet>
 
       {alreadyPaid ? (
-        <div className="mt-8 rounded-[20px] border border-paid/30 bg-raised px-5 py-4">
+        <div className="mt-8 rounded-xl border border-paid/30 bg-raised px-5 py-4">
           <p className="flex items-center gap-2 text-sm text-paid">
             <Check className="size-4" strokeWidth={2} />
             Paid

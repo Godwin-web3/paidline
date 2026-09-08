@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
+import { InvoiceSheet } from "@/components/invoice-sheet";
 import { SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { listInvoices } from "@/lib/paidline/invoices";
 import { useSession } from "@/lib/paidline/session";
@@ -65,59 +66,78 @@ function Invoices() {
       {!ready ? (
         <p className="mt-12 text-sm text-muted">Loading…</p>
       ) : !address ? (
-        <div className="mt-12 rounded-[28px] border border-line bg-surface px-6 py-14 text-center">
-          <p className="font-display text-2xl tracking-tight">Connect the wallet you issue from</p>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-            Invoices live on Creditcoin. This list is yours, not a shared board.
-          </p>
-          <div className="mt-6">
-            <Button onClick={() => void connect()}>Connect wallet</Button>
-          </div>
-        </div>
+        <EmptyPanel
+          title="Connect the wallet you issue from"
+          body="Invoices live on Creditcoin. This list is yours, not a shared board."
+        >
+          <Button onClick={() => void connect()}>Connect wallet</Button>
+        </EmptyPanel>
       ) : invoices === null && !loadError ? (
         <p className="mt-12 text-sm text-muted">Reading your invoices…</p>
       ) : invoices && invoices.length === 0 ? (
-        <div className="mt-12 rounded-[28px] border border-line bg-surface px-6 py-14 text-center">
-          <p className="font-display text-2xl tracking-tight">No invoices yet</p>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-muted">
-            Issue one. You get a payment link. The buyer sends USDC. This page updates when it
-            clears.
-          </p>
-          <div className="mt-6">
-            <Link to="/new">
-              <Button>Issue invoice</Button>
-            </Link>
-          </div>
-        </div>
+        <EmptyPanel
+          title="No invoices yet"
+          body="Issue one. You get a payment link. The buyer sends USDC. This page updates when it clears."
+        >
+          <Link to="/new">
+            <Button>Issue invoice</Button>
+          </Link>
+        </EmptyPanel>
       ) : invoices ? (
-        <ul className="mt-10 divide-y divide-line rounded-[28px] border border-line bg-surface">
+        <ul className="mt-10 grid gap-3">
           {invoices.map((inv) => (
             <li key={inv.id}>
-              <Link
-                to="/invoice/$id"
-                params={{ id: String(inv.id) }}
-                className="flex items-center justify-between gap-4 px-5 py-4 transition-colors duration-150 hover:bg-raised"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">
-                    #{inv.id} · {inv.title}
-                  </p>
-                  <p className="mt-1 text-xs text-muted">
-                    {formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)} USDC
-                    {inv.status === "unpaid" || inv.status === "expired"
-                      ? ` · ${formatDue(inv.expiry)}`
-                      : ""}
-                  </p>
-                </div>
-                <span className="flex items-center gap-3">
-                  <StatusPill status={inv.status} />
-                  <ArrowRight className="size-4 text-faint" strokeWidth={1.5} />
-                </span>
+              <Link to="/invoice/$id" params={{ id: String(inv.id) }}>
+                <InvoiceSheet className="px-5 py-4 transition-transform duration-150 ease-out hover:-translate-y-0.5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="truncate font-display text-xl tracking-tight text-ink">
+                        #{inv.id}
+                        <span className="ml-2 font-sans text-sm font-medium">{inv.title}</span>
+                      </p>
+                      <p className="mt-1 text-xs text-ink-muted">
+                        {formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)} USDC
+                        {inv.status === "unpaid" || inv.status === "expired"
+                          ? ` · ${formatDue(inv.expiry)}`
+                          : ""}
+                      </p>
+                    </div>
+                    <span className="flex items-center gap-3">
+                      <StatusPill status={inv.status} />
+                      <ArrowRight className="size-4 text-ink-muted" strokeWidth={1.5} />
+                    </span>
+                  </div>
+                </InvoiceSheet>
               </Link>
             </li>
           ))}
         </ul>
       ) : null}
     </main>
+  );
+}
+
+function EmptyPanel({
+  title,
+  body,
+  children,
+}: {
+  title: string;
+  body: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="mt-12 overflow-hidden rounded-2xl border border-line bg-surface">
+      <img
+        src="/brand/specimen.jpg"
+        alt=""
+        className="h-40 w-full object-cover opacity-80"
+      />
+      <div className="px-6 py-10 text-center">
+        <p className="font-display text-3xl tracking-tight">{title}</p>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">{body}</p>
+        <div className="mt-6">{children}</div>
+      </div>
+    </div>
   );
 }

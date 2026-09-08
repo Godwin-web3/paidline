@@ -3,6 +3,7 @@ import { Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
+import { InvoiceSheet, SheetMeta } from "@/components/invoice-sheet";
 import {
   CREDITCOIN_EXPLORER,
   LOCAL_DECIMALS,
@@ -84,48 +85,35 @@ function SellerInvoice() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-10 sm:px-6 sm:py-14">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-muted">Invoice #{invoice.id}</p>
-          <h1 className="mt-2 font-display text-4xl tracking-tight">{invoice.title}</h1>
+      <InvoiceSheet className="p-6 sm:p-8">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-ink-muted">Invoice #{invoice.id}</p>
+            <h1 className="mt-2 font-display text-4xl tracking-tight text-ink">{invoice.title}</h1>
+          </div>
+          <StatusPill status={invoice.status} />
         </div>
-        <StatusPill status={invoice.status} />
-      </div>
 
-      <dl className="mt-8 grid gap-4 rounded-[28px] border border-line bg-surface p-6">
-        <div>
-          <dt className="text-xs uppercase tracking-wide text-faint">Amount due</dt>
-          <dd className="mt-1 font-display text-3xl tabular-nums tracking-tight">
-            {formatUnits(BigInt(invoice.sourceAmount), SOURCE_DECIMALS)} USDC
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-wide text-faint">Buyer receives</dt>
-          <dd className="mt-1 text-sm">{invoice.releaseLabel}</dd>
-        </div>
-        <div>
-          <dt className="text-xs uppercase tracking-wide text-faint">Pay to</dt>
-          <dd className="mt-1 break-all font-mono text-xs">{invoice.sourceRecipient}</dd>
-        </div>
-        {invoice.status === "unpaid" || invoice.status === "expired" ? (
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-faint">Due</dt>
-            <dd className="mt-1 text-sm">{formatDue(invoice.expiry)}</dd>
-          </div>
-        ) : null}
-        {invoice.funded && BigInt(invoice.localAmount) > 0n ? (
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-faint">Locked</dt>
-            <dd className="mt-1 text-sm">
-              {formatUnits(BigInt(invoice.localAmount), LOCAL_DECIMALS)} tCTC · releases to the
-              payer
-            </dd>
-          </div>
-        ) : null}
-        {invoice.status === "paid" && invoice.paidTxHash ? (
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-faint">Ethereum payment</dt>
-            <dd className="mt-1">
+        <dl className="mt-8 grid gap-5">
+          <SheetMeta label="Amount due">
+            <span className="font-display text-4xl tabular-nums tracking-tight">
+              {formatUnits(BigInt(invoice.sourceAmount), SOURCE_DECIMALS)} USDC
+            </span>
+          </SheetMeta>
+          <SheetMeta label="Buyer receives">{invoice.releaseLabel}</SheetMeta>
+          <SheetMeta label="Pay to">
+            <span className="break-all font-mono text-xs">{invoice.sourceRecipient}</span>
+          </SheetMeta>
+          {invoice.status === "unpaid" || invoice.status === "expired" ? (
+            <SheetMeta label="Due">{formatDue(invoice.expiry)}</SheetMeta>
+          ) : null}
+          {invoice.funded && BigInt(invoice.localAmount) > 0n ? (
+            <SheetMeta label="Locked">
+              {formatUnits(BigInt(invoice.localAmount), LOCAL_DECIMALS)} tCTC · releases to the payer
+            </SheetMeta>
+          ) : null}
+          {invoice.status === "paid" && invoice.paidTxHash ? (
+            <SheetMeta label="Ethereum payment">
               <a
                 className="font-mono text-xs underline underline-offset-4"
                 href={`${SEPOLIA_EXPLORER}/tx/${invoice.paidTxHash}`}
@@ -134,10 +122,10 @@ function SellerInvoice() {
               >
                 {shortAddr(invoice.paidTxHash, 8)}
               </a>
-            </dd>
-          </div>
-        ) : null}
-      </dl>
+            </SheetMeta>
+          ) : null}
+        </dl>
+      </InvoiceSheet>
 
       {invoice.status === "paid" ? (
         <p className="mt-6 flex items-center gap-2 text-sm text-paid">

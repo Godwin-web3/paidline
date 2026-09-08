@@ -1,21 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: "Instrument Serif", "Times New Roman", serif;
+  --font-display: "Fraunces", "Times New Roman", serif;
   --font-sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
 
-  --color-bg: #0b0c0b;
-  --color-surface: #121412;
-  --color-raised: #181b18;
-  --color-fg: #ecece6;
-  --color-muted: #8d9088;
-  --color-faint: #5c5f58;
-  --color-line: #262926;
-  --color-line-strong: #3a3e38;
-  --color-accent: #d7dbd1;
-  --color-accent-fg: #0b0c0b;
-  --color-paid: #8fbf9a;
+  --color-bg: #14110e;
+  --color-surface: #1c1814;
+  --color-raised: #241f1a;
+  --color-fg: #f4eee6;
+  --color-muted: #9c9286;
+  --color-faint: #6e665c;
+  --color-line: #2e2822;
+  --color-line-strong: #433b33;
+  --color-accent: #efe6d8;
+  --color-accent-fg: #14110e;
+  --color-paper: #efe6d8;
+  --color-ink: #14110e;
+  --color-ink-muted: #6e665c;
+  --color-rule: #d4cbb8;
+  --color-paid: #8fad8a;
   --color-warn: #c4b58a;
   --color-bad: #c98980;
 
@@ -23,8 +27,12 @@
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-xl: 28px;
+  --radius-2xl: 36px;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --shadow-sheet: 0 24px 48px -28px rgb(0 0 0 / 0.55);
 }
 
 @layer base {
@@ -42,10 +50,13 @@
     min-height: 100dvh;
   }
 
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     text-wrap: balance;
     font-family: var(--font-display);
     letter-spacing: -0.03em;
+    font-optical-sizing: auto;
   }
 
   p {
@@ -63,8 +74,44 @@
   }
 }
 
+@layer components {
+  .grain {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.055;
+    mix-blend-mode: overlay;
+    background-image: url("/brand/paper.jpg");
+    background-size: 420px;
+  }
+
+  .paid-rule {
+    height: 1px;
+    width: 100%;
+    background: var(--color-line-strong);
+  }
+
+  .sheet-rules {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 27px,
+      color-mix(in oklab, var(--color-ink) 10%, transparent) 27px,
+      color-mix(in oklab, var(--color-ink) 10%, transparent) 28px
+    );
+  }
+
+  .paper-tooth {
+    background-image: url("/brand/paper.jpg");
+    background-size: 420px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }

@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
+import { InvoiceSheet } from "@/components/invoice-sheet";
 import { LOCAL_DECIMALS, SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { useSession } from "@/lib/paidline/session";
 import { createOnchainInvoice, hasWallet } from "@/lib/paidline/wallet";
@@ -79,7 +80,7 @@ function NewInvoice() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-10 sm:px-6 sm:py-14">
-      <p className="text-xs uppercase tracking-[0.18em] text-muted">Issue</p>
+      <p className="text-xs uppercase tracking-wide text-muted">Issue</p>
       <h1 className="mt-2 font-display text-4xl tracking-tight">New invoice</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted">
         This writes to Creditcoin. The buyer pays USDC on Ethereum to{" "}
@@ -91,75 +92,81 @@ function NewInvoice() {
         . Creditcoin you lock is released to whoever paid.
       </p>
 
-      <form onSubmit={(e) => void onCreate(e)} className="mt-8 grid gap-5">
-        <Field label="What you are selling">
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="font-sans"
-            placeholder="September retainer"
-            autoComplete="off"
-          />
-        </Field>
-        <Field
-          label="Price in USDC"
-          hint="Buyer sends this exact amount on Ethereum. You cannot have two open invoices for the same amount to this wallet."
-        >
-          <Input
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            inputMode="decimal"
-            placeholder="250.00"
-          />
-        </Field>
-        <Field label="What they receive">
-          <Input
-            value={releaseLabel}
-            onChange={(e) => setReleaseLabel(e.target.value)}
-            className="font-sans"
-            placeholder="Delivery of the work"
-            autoComplete="off"
-          />
-        </Field>
-        <Field
-          label="Creditcoin to lock"
-          hint="Released to the paying wallet when the USDC transfer is confirmed."
-        >
-          <Input
-            value={escrow}
-            onChange={(e) => setEscrow(e.target.value)}
-            inputMode="decimal"
-            placeholder="0.01"
-          />
-        </Field>
-        <Field label="Due">
-          <div className="flex flex-wrap gap-2">
-            {DUE_OPTIONS.map((opt) => (
-              <button
-                key={opt.hours}
-                type="button"
-                onClick={() => setHours(opt.hours)}
-                className={
-                  hours === opt.hours
-                    ? "h-11 rounded-[12px] bg-accent px-4 text-sm text-accent-fg"
-                    : "h-11 rounded-[12px] border border-line px-4 text-sm text-muted hover:text-fg"
-                }
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </Field>
-        {error ? <p className="text-sm text-bad">{error}</p> : null}
-        <Button type="submit" size="lg" disabled={busy}>
-          {busy ? "Waiting on wallet…" : "Issue invoice"}
-        </Button>
-        <p className="text-center text-xs text-faint">
-          <Link to="/invoices" className="underline decoration-line underline-offset-4">
-            Back to invoices
-          </Link>
-        </p>
-      </form>
+      <InvoiceSheet className="mt-8 p-6 sm:p-8">
+        <form onSubmit={(e) => void onCreate(e)} className="grid gap-5">
+          <Field label="What you are selling" paper>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="border-rule bg-paper font-sans text-ink placeholder:text-ink-muted"
+              placeholder="September retainer"
+              autoComplete="off"
+            />
+          </Field>
+          <Field
+            paper
+            label="Price in USDC"
+            hint="Buyer sends this exact amount on Ethereum. You cannot have two open invoices for the same amount to this wallet."
+          >
+            <Input
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              inputMode="decimal"
+              placeholder="250.00"
+              className="border-rule bg-paper text-ink placeholder:text-ink-muted"
+            />
+          </Field>
+          <Field label="What they receive" paper>
+            <Input
+              value={releaseLabel}
+              onChange={(e) => setReleaseLabel(e.target.value)}
+              className="border-rule bg-paper font-sans text-ink placeholder:text-ink-muted"
+              placeholder="Delivery of the work"
+              autoComplete="off"
+            />
+          </Field>
+          <Field
+            paper
+            label="Creditcoin to lock"
+            hint="Released to the paying wallet when the USDC transfer is confirmed."
+          >
+            <Input
+              value={escrow}
+              onChange={(e) => setEscrow(e.target.value)}
+              inputMode="decimal"
+              placeholder="0.01"
+              className="border-rule bg-paper text-ink placeholder:text-ink-muted"
+            />
+          </Field>
+          <Field label="Due" paper>
+            <div className="flex flex-wrap gap-2">
+              {DUE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.hours}
+                  type="button"
+                  onClick={() => setHours(opt.hours)}
+                  className={
+                    hours === opt.hours
+                      ? "h-11 rounded-md bg-ink px-4 text-sm text-paper"
+                      : "h-11 rounded-md border border-rule px-4 text-sm text-ink-muted hover:text-ink"
+                  }
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </Field>
+          {error ? <p className="text-sm text-bad">{error}</p> : null}
+          <Button type="submit" size="lg" variant="ink" disabled={busy}>
+            {busy ? "Waiting on wallet…" : "Issue invoice"}
+          </Button>
+        </form>
+      </InvoiceSheet>
+      <p className="mt-6 text-center text-xs text-faint">
+        <Link to="/invoices" className="underline decoration-line underline-offset-4">
+          Back to invoices
+        </Link>
+      </p>
     </main>
   );
 }
