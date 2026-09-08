@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CREDITCOIN_EXPLORER, PAIDLINE_ADDRESS } from "@/lib/paidline/constants";
+import { Mark } from "@/components/mark";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 
@@ -36,16 +37,23 @@ const STEPS = [
 function HowPage() {
   return (
     <main>
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
-          <p className="text-xs uppercase tracking-wide text-muted">How it works</p>
-          <h1 className="mt-3 max-w-xl font-display text-5xl tracking-tight sm:text-6xl">
+      <section className="relative overflow-hidden border-b border-line">
+        <img
+          src="/brand/hero.jpg"
+          alt="A steel hallmark stamp above a cream invoice"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 hero-scrim" />
+        <div className="relative mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
+          <p className="text-xs uppercase tracking-wide text-hero-muted">How it works</p>
+          <h1 className="mt-3 max-w-xl font-display text-5xl tracking-tight text-hero sm:text-6xl">
             Remote proof.
-            <span className="mt-2 block">Local action.</span>
+            <span className="block italic">Local action.</span>
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted">
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-hero-muted">
             The seller issues an invoice. The buyer sends USDC like any other transfer. Underneath,
             Paidline checks that transfer on Ethereum, then releases what was locked on Creditcoin.
+            The people do not operate the proof.
           </p>
         </div>
       </section>
@@ -65,39 +73,59 @@ function HowPage() {
         ))}
       </ol>
 
-      <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-        <p className="text-xs uppercase tracking-wide text-muted">For other contracts</p>
-        <h2 className="mt-3 font-display text-3xl tracking-tight">What they call</h2>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-          Paidline is the checker. You do not integrate Attestcoin yourself. Ask whether an invoice
-          is paid, or listen when it becomes paid, then run your own logic.
-        </p>
-        <ul className="mt-8 rounded-xl border border-line bg-surface">
-          <li className="border-b border-line px-5 py-5">
-            <p className="font-mono text-xs text-fg">isPaid(invoiceId) → bool</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              True only after a matching remote payment has been verified and local value released.
-              Unknown invoices return false.
-            </p>
-          </li>
-          <li className="px-5 py-5">
-            <p className="font-mono text-xs text-fg">InvoicePaid</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Emitted in the same transaction as the release. Indexed on invoice, source
-              transaction, and the wallet that received Creditcoin.
-            </p>
-          </li>
-        </ul>
-        <p className="mt-6 break-all font-mono text-xs text-faint">
-          <a
-            className="underline underline-offset-4"
-            href={`${CREDITCOIN_EXPLORER}/address/${PAIDLINE_ADDRESS}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {PAIDLINE_ADDRESS}
-          </a>
-        </p>
+      <section className="mx-auto grid max-w-3xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-2">
+        <figure className="overflow-hidden rounded-xl">
+          <img
+            src="/brand/two-assets.jpg"
+            alt="Paper overlapping steel"
+            className="h-full w-full object-cover"
+          />
+        </figure>
+        <div className="flex flex-col justify-center">
+          <h2 className="font-display text-3xl tracking-tight">What you are looking at</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted">
+            Paidline is live on Creditcoin. Payments are USDC on Ethereum Sepolia, because that is
+            the chain Attestcoin currently reads. The local balance is Creditcoin, not wrapped USDC.
+            Merchants only see invoices they issued. The first matching payment settles an invoice.
+          </p>
+          <p className="mt-4 break-all font-mono text-xs text-faint">
+            <a
+              className="underline underline-offset-4"
+              href={`${CREDITCOIN_EXPLORER}/address/${PAIDLINE_ADDRESS}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {PAIDLINE_ADDRESS}
+            </a>
+          </p>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-3xl px-4 pb-20 sm:px-6">
+        <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
+          <Mark className="size-10" />
+          <h2 className="mt-5 font-display text-3xl tracking-tight">What other contracts call</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted">
+            Paidline is the checker. You do not integrate Attestcoin yourself. Ask whether an
+            invoice is paid, or listen when it becomes paid, then run your own logic.
+          </p>
+          <ul className="mt-6 space-y-5 text-sm leading-relaxed text-muted">
+            <li>
+              <p className="font-mono text-xs text-fg">isPaid(invoiceId) → bool</p>
+              <p className="mt-1">
+                True only after a matching remote payment has been verified and local value
+                released. Unknown invoices return false.
+              </p>
+            </li>
+            <li>
+              <p className="font-mono text-xs text-fg">InvoicePaid</p>
+              <p className="mt-1">
+                Emitted in the same transaction as the release. Indexed on invoice, source
+                transaction, and the wallet that received Creditcoin.
+              </p>
+            </li>
+          </ul>
+        </div>
         <div className="mt-10 flex flex-wrap gap-3">
           <Link to="/new">
             <Button>Issue an invoice</Button>
