@@ -50,8 +50,9 @@ function HowPage() {
             <span className="block italic">Local action.</span>
           </h1>
           <p className="mt-5 max-w-xl text-base leading-relaxed text-hero-muted">
-            The seller sees an invoice. The buyer sees a payment page. Underneath, Paidline checks
-            that a USDC transfer happened on Ethereum, then releases what you locked on Creditcoin.
+            The seller issues an invoice. The buyer sends USDC like any other transfer. Underneath,
+            Paidline checks that transfer on Ethereum, then releases what was locked on Creditcoin.
+            The people do not operate the proof.
           </p>
         </div>
       </section>

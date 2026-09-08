@@ -17,14 +17,14 @@ export function SiteFooter() {
             </div>
           </div>
           <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
+            <a href="/#product" className="hover:text-fg">
+              Product
+            </a>
             <Link to="/how" className="hover:text-fg">
               How
             </Link>
             <Link to="/invoices" className="hover:text-fg">
-              Invoices
-            </Link>
-            <Link to="/new" className="hover:text-fg">
-              Issue
+              Workspace
             </Link>
             <a
               href={`${CREDITCOIN_EXPLORER}/address/${PAIDLINE_ADDRESS}`}

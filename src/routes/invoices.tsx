@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { listInvoices } from "@/lib/paidline/invoices";
 import { useSession } from "@/lib/paidline/session";
 import type { InvoiceWire } from "@/lib/paidline/types";
-import { formatDue, formatUnits } from "@/lib/utils";
+import { formatDue, formatUnits, shortAddr } from "@/lib/utils";
 
 export const Route = createFileRoute("/invoices")({ component: Invoices });
 
@@ -39,18 +39,27 @@ function Invoices() {
     return () => window.clearInterval(t);
   }, [address]);
 
+  const pending = invoices?.filter((i) => i.status === "unpaid").length ?? 0;
+  const paid = invoices?.filter((i) => i.status === "paid").length ?? 0;
+
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-wide text-muted">Workspace</p>
-          <h1 className="mt-1 font-display text-2xl tracking-tight sm:text-3xl">Invoices</h1>
+          <h1 className="font-display text-2xl tracking-tight sm:text-3xl">Invoices</h1>
+          {invoices && invoices.length > 0 ? (
+            <p className="mt-1 text-sm text-muted">
+              {pending} pending · {paid} paid
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-muted">Issued from the connected wallet.</p>
+          )}
         </div>
         {address ? (
           <Link to="/new">
             <Button>
               <Plus className="size-4" strokeWidth={1.75} />
-              New
+              Create invoice
             </Button>
           </Link>
         ) : null}
@@ -73,41 +82,53 @@ function Invoices() {
       ) : invoices && invoices.length === 0 ? (
         <EmptyPanel
           title="No invoices yet"
-          body="Issue one. Share the payment link. This list updates when the USDC clears."
+          body="Create one. Lock Creditcoin. Send the payment link. This list moves from pending to paid when the USDC is checked."
         >
           <Link to="/new">
-            <Button>Issue invoice</Button>
+            <Button>Create invoice</Button>
           </Link>
         </EmptyPanel>
       ) : invoices ? (
-        <ul className="mt-8 overflow-hidden rounded-lg border border-line bg-surface">
-          {invoices.map((inv) => (
-            <li key={inv.id} className="border-b border-line last:border-b-0">
-              <Link
-                to="/invoice/$id"
-                params={{ id: String(inv.id) }}
-                className="flex items-center justify-between gap-4 px-4 py-3.5 transition-colors duration-150 hover:bg-raised"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm">
-                    <span className="font-mono text-xs text-muted">#{inv.id}</span>
-                    <span className="ml-2 font-medium">{inv.title}</span>
-                  </p>
-                  <p className="mt-0.5 font-mono text-xs text-muted">
+        <div className="mt-8 overflow-hidden rounded-lg border border-line bg-surface">
+          <div className="hidden grid-cols-[1fr_7rem_7rem] gap-4 border-b border-line px-4 py-2.5 text-[11px] uppercase tracking-wide text-muted sm:grid">
+            <span>Invoice</span>
+            <span className="text-right">Amount</span>
+            <span className="text-right">Status</span>
+          </div>
+          <ul>
+            {invoices.map((inv) => (
+              <li key={inv.id} className="border-b border-line last:border-b-0">
+                <Link
+                  to="/invoice/$id"
+                  params={{ id: String(inv.id) }}
+                  className="grid gap-1 px-4 py-3.5 transition-colors duration-150 hover:bg-raised sm:grid-cols-[1fr_7rem_7rem] sm:items-center sm:gap-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm">
+                      <span className="font-mono text-xs text-muted">#{inv.id}</span>
+                      <span className="ml-2 font-medium">{inv.title}</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {inv.status === "paid" && inv.paidTxHash ? (
+                        <span className="font-mono">{shortAddr(inv.paidTxHash, 6)}</span>
+                      ) : inv.status === "unpaid" || inv.status === "expired" ? (
+                        formatDue(inv.expiry)
+                      ) : (
+                        inv.releaseLabel
+                      )}
+                    </p>
+                  </div>
+                  <p className="font-mono text-sm tabular-nums sm:text-right">
                     {formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)} USDC
-                    {inv.status === "unpaid" || inv.status === "expired"
-                      ? ` · ${formatDue(inv.expiry)}`
-                      : ""}
                   </p>
-                </div>
-                <span className="flex items-center gap-3">
-                  <StatusPill status={inv.status} />
-                  <ArrowRight className="size-4 text-faint" strokeWidth={1.5} />
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                  <div className="sm:justify-self-end">
+                    <StatusPill status={inv.status} />
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
     </main>
   );

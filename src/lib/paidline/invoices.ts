@@ -1,9 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { existsSync, readFileSync } from "node:fs";
-import { Contract, JsonRpcProvider, Wallet } from "ethers";
+import { Contract, JsonRpcProvider, Wallet, zeroPadValue } from "ethers";
 import { PAIDLINE_ABI } from "./abi.ts";
 import { readInvoice, readInvoices } from "./chain.ts";
-import { CREDITCOIN_RPC, PAIDLINE_ADDRESS, PROVER_URL, SEPOLIA_CHAIN_KEY } from "./constants.ts";
+import {
+  CREDITCOIN_RPC,
+  PAIDLINE_ADDRESS,
+  PROVER_URL,
+  SEPOLIA_CHAIN_KEY,
+  SEPOLIA_RPC,
+  TRANSFER_TOPIC,
+  USDC_SEPOLIA,
+} from "./constants.ts";
 
 function toWire(inv: Awaited<ReturnType<typeof readInvoice>>) {
   if (!inv) return null;
@@ -167,4 +175,38 @@ export const confirmPayment = createServerFn({ method: "POST" })
         return { ok: false, error: humanRevert(msg) };
       }
     });
+  });
+
+export const findMatchingTransfer = createServerFn({ method: "GET" })
+  .validator((d: { invoiceId: number }) => {
+    const invoiceId = Number(d?.invoiceId);
+    if (!Number.isInteger(invoiceId) || invoiceId < 1) throw new Error("Bad invoice id.");
+    return { invoiceId };
+  })
+  .handler(async ({ data }): Promise<{ hash: string | null }> => {
+    const invoice = await readInvoice(data.invoiceId);
+    if (!invoice || invoice.status !== "unpaid") return { hash: null };
+    try {
+      const provider = new JsonRpcProvider(SEPOLIA_RPC);
+      const latest = await provider.getBlockNumber();
+      const fromBlock = Math.max(0, latest - 4000);
+      const toTopic = zeroPadValue(invoice.sourceRecipient, 32);
+      const logs = await provider.getLogs({
+        address: USDC_SEPOLIA,
+        topics: [TRANSFER_TOPIC, null, toTopic],
+        fromBlock,
+        toBlock: latest,
+      });
+      const amount = BigInt(invoice.sourceAmount);
+      for (let i = logs.length - 1; i >= 0; i--) {
+        const log = logs[i];
+        if (!log) continue;
+        if (log.data.length < 66) continue;
+        const value = BigInt(log.data);
+        if (value === amount && log.transactionHash) return { hash: log.transactionHash };
+      }
+    } catch {
+      return { hash: null };
+    }
+    return { hash: null };
   });

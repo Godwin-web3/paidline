@@ -80,16 +80,16 @@ function NewInvoice() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
-      <p className="text-xs uppercase tracking-wide text-muted">Workspace</p>
-      <h1 className="mt-1 font-display text-2xl tracking-tight sm:text-3xl">New invoice</h1>
+      <h1 className="font-display text-2xl tracking-tight sm:text-3xl">Create invoice</h1>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        Writes to Creditcoin. Buyer pays USDC on Ethereum to{" "}
+        Name the work, the USDC the buyer sends on Ethereum, and what you release. Lock Creditcoin
+        so it is sitting ready. You get a payment link.
         {address ? (
-          <span className="font-mono text-fg">{shortAddr(address, 4)}</span>
-        ) : (
-          "the connected wallet"
-        )}
-        . Locked Creditcoin releases to whoever paid.
+          <>
+            {" "}
+            USDC lands at <span className="font-mono text-fg">{shortAddr(address, 4)}</span>.
+          </>
+        ) : null}
       </p>
 
       <InvoiceSheet className="mt-8 p-6 sm:p-8">
@@ -158,7 +158,7 @@ function NewInvoice() {
           </Field>
           {error ? <p className="text-sm text-bad">{error}</p> : null}
           <Button type="submit" size="lg" variant="ink" disabled={busy}>
-            {busy ? "Waiting on wallet…" : "Issue invoice"}
+            {busy ? "Waiting on wallet…" : "Create invoice"}
           </Button>
         </form>
       </InvoiceSheet>

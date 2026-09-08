@@ -87,7 +87,7 @@ function SellerInvoice() {
     <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
       <p className="mb-4 text-xs uppercase tracking-wide text-muted">
         <Link to="/invoices" className="hover:text-fg">
-          Workspace
+          Invoices
         </Link>
         <span className="mx-2 text-faint">/</span>
         Invoice #{invoice.id}
@@ -137,7 +137,7 @@ function SellerInvoice() {
       {invoice.status === "paid" ? (
         <p className="mt-6 flex items-center gap-2 text-sm text-paid">
           <Check className="size-4" strokeWidth={2} />
-          Paid. {invoice.releaseLabel} released.
+          Paid. {invoice.releaseLabel} released. No one in the middle confirmed this.
         </p>
       ) : (
         <div className="mt-6 flex flex-wrap gap-2">

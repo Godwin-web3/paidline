@@ -1,18 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Check } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { InvoiceSheet, SheetMeta } from "@/components/invoice-sheet";
 import { SEPOLIA_EXPLORER, SOURCE_DECIMALS } from "@/lib/paidline/constants";
-import { confirmPayment, getInvoice } from "@/lib/paidline/invoices";
+import { confirmPayment, findMatchingTransfer, getInvoice } from "@/lib/paidline/invoices";
 import type { InvoiceWire } from "@/lib/paidline/types";
 import { hasWallet, sendUsdc } from "@/lib/paidline/wallet";
 import { copyText, formatUnits, isTxHash, shortAddr } from "@/lib/utils";
 
 export const Route = createFileRoute("/pay/$id")({ component: BuyerPay });
 
-type Phase = "idle" | "sending" | "proving" | "paid" | "failed";
+type Phase = "idle" | "sending" | "watching" | "proving" | "paid" | "failed";
 
 function BuyerPay() {
   const { id } = Route.useParams();
@@ -22,6 +22,8 @@ function BuyerPay() {
   const [copied, setCopied] = useState(false);
   const [txHash, setTxHash] = useState("");
   const [fail, setFail] = useState<string | null>(null);
+  const [showHash, setShowHash] = useState(false);
+  const proving = useRef(false);
 
   useEffect(() => {
     void getInvoice({ data: { id: invoiceId } }).then((inv) => {
@@ -29,6 +31,41 @@ function BuyerPay() {
       if (inv?.status === "paid") setPhase("paid");
     });
   }, [invoiceId]);
+
+  useEffect(() => {
+    if (!invoice || invoice.status !== "unpaid") return;
+    if (phase === "sending" || phase === "proving" || phase === "paid") return;
+    let stop = false;
+    async function tick() {
+      const found = await findMatchingTransfer({ data: { invoiceId } });
+      if (stop || !found.hash || proving.current) return;
+      setTxHash(found.hash);
+      setPhase("watching");
+      await prove(found.hash);
+    }
+    const t = window.setInterval(() => void tick(), 8000);
+    void tick();
+    return () => {
+      stop = true;
+      window.clearInterval(t);
+    };
+  }, [invoice, invoiceId, phase]);
+
+  async function prove(hash: string) {
+    if (proving.current) return;
+    proving.current = true;
+    setPhase("proving");
+    const result = await confirmPayment({ data: { invoiceId, txHash: hash } });
+    if (!result.ok) {
+      proving.current = false;
+      setPhase("failed");
+      setFail(result.error ?? "This payment was not accepted.");
+      return;
+    }
+    const next = await getInvoice({ data: { id: invoiceId } });
+    setInvoice(next);
+    setPhase("paid");
+  }
 
   if (invoice === undefined) {
     return (
@@ -52,23 +89,10 @@ function BuyerPay() {
   const alreadyPaid = live.status === "paid" || phase === "paid";
   const closed = live.status === "cancelled" || live.status === "expired";
 
-  async function prove(hash: string) {
-    setPhase("proving");
-    const result = await confirmPayment({ data: { invoiceId: live.id, txHash: hash } });
-    if (!result.ok) {
-      setPhase("failed");
-      setFail(result.error ?? "This payment was not accepted.");
-      return;
-    }
-    const next = await getInvoice({ data: { id: live.id } });
-    setInvoice(next);
-    setPhase("paid");
-  }
-
   async function payWithWallet() {
     setFail(null);
     if (!hasWallet()) {
-      setFail("Connect a wallet on Ethereum, or send USDC and paste the transaction hash.");
+      setFail("Connect a wallet on Ethereum, or send USDC from any wallet. This page watches for it.");
       return;
     }
     setPhase("sending");
@@ -77,6 +101,7 @@ function BuyerPay() {
       setTxHash(hash);
       await prove(hash);
     } catch (err) {
+      proving.current = false;
       setPhase("failed");
       setFail(err instanceof Error ? err.message : "Transfer failed.");
     }
@@ -95,10 +120,10 @@ function BuyerPay() {
   return (
     <main className="mx-auto max-w-md px-4 py-8 sm:py-10">
       <InvoiceSheet className="p-6 sm:p-8">
-        <p className="text-xs uppercase tracking-wide text-ink-muted">Invoice #{invoice.id}</p>
+        <p className="text-xs uppercase tracking-wide text-ink-muted">Pay invoice #{invoice.id}</p>
         <h1 className="mt-3 font-display text-4xl tracking-tight text-ink">{invoice.title}</h1>
         <p className="mt-2 text-sm text-ink-muted">
-          Send USDC on Ethereum (Sepolia). That is the whole job.
+          Send {amount} USDC to this address on Ethereum. Use the wallet you already have.
         </p>
 
         <dl className="mt-8 grid gap-5">
@@ -165,17 +190,28 @@ function BuyerPay() {
                 ? "Confirming payment…"
                 : `Pay ${amount} USDC`}
           </Button>
-          <form onSubmit={(e) => void payWithHash(e)} className="grid gap-3">
-            <Field label="Already sent? Paste the transaction hash">
-              <Input value={txHash} onChange={(e) => setTxHash(e.target.value)} spellCheck={false} />
-            </Field>
-            <Button type="submit" variant="ghost" disabled={phase === "proving"}>
-              Confirm payment
-            </Button>
-          </form>
-          <p className="text-center text-xs text-faint">
-            Send the exact amount. The first matching payment settles this invoice.
+          <p className="text-center text-xs text-muted">
+            {phase === "watching" || phase === "proving"
+              ? "Payment seen. The contract is checking it."
+              : "Or send from any wallet. This page watches for the exact amount."}
           </p>
+          <button
+            type="button"
+            className="text-center text-xs text-faint underline underline-offset-4"
+            onClick={() => setShowHash((v) => !v)}
+          >
+            {showHash ? "Hide transaction hash" : "Already sent? Paste the hash"}
+          </button>
+          {showHash ? (
+            <form onSubmit={(e) => void payWithHash(e)} className="grid gap-3">
+              <Field label="Ethereum transaction hash">
+                <Input value={txHash} onChange={(e) => setTxHash(e.target.value)} spellCheck={false} />
+              </Field>
+              <Button type="submit" variant="ghost" disabled={phase === "proving"}>
+                Confirm payment
+              </Button>
+            </form>
+          ) : null}
           {fail ? <p className="text-sm text-bad">{fail}</p> : null}
         </div>
       )}
