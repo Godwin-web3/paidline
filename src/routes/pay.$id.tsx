@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -171,6 +171,15 @@ function BuyerPay() {
               {shortAddr(invoice.paidTxHash, 8)}
             </a>
           ) : null}
+          <p className="mt-4">
+            <Link
+              to="/receipt/$id"
+              params={{ id: String(invoice.id) }}
+              className="text-sm underline decoration-line underline-offset-4"
+            >
+              Open the receipt
+            </Link>
+          </p>
         </div>
       ) : closed ? (
         <p className="mt-8 text-sm text-muted">

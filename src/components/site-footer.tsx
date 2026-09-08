@@ -17,20 +17,17 @@ export function SiteFooter() {
             </div>
           </div>
           <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
-            <Link to="/new" className="hover:text-fg">
-              Issue
+            <Link to="/invoices" className="hover:text-fg">
+              Desk
             </Link>
             <Link to="/pay" className="hover:text-fg">
               Pay
             </Link>
-            <Link to="/invoices" className="hover:text-fg">
-              Desk
+            <Link to="/gate" className="hover:text-fg">
+              Gate
             </Link>
-            <Link to="/how" className="hover:text-fg">
-              How
-            </Link>
-            <Link to="/source" className="hover:text-fg">
-              Source
+            <Link to="/docs" className="hover:text-fg">
+              Docs
             </Link>
           </nav>
         </div>

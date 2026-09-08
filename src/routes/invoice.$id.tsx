@@ -144,10 +144,19 @@ function SellerInvoice() {
       </div>
 
       {invoice.status === "paid" ? (
-        <p className="mt-6 flex items-center gap-2 text-sm text-paid">
-          <Check className="size-4" strokeWidth={2} />
-          Paid. {invoice.releaseLabel} released. No one in the middle confirmed this.
-        </p>
+        <div className="mt-6">
+          <p className="flex items-center gap-2 text-sm text-paid">
+            <Check className="size-4" strokeWidth={2} />
+            Paid. {invoice.releaseLabel} released. No one in the middle confirmed this.
+          </p>
+          <Link
+            to="/receipt/$id"
+            params={{ id: String(invoice.id) }}
+            className="mt-3 inline-block text-sm underline decoration-line underline-offset-4"
+          >
+            Open the receipt
+          </Link>
+        </div>
       ) : (
         <div className="mt-6 flex flex-wrap gap-2">
           <Button onClick={() => void onCopy()}>

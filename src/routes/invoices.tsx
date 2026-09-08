@@ -171,7 +171,7 @@ function Invoices() {
               Creditcoin CC3 testnet. USDC on Ethereum Sepolia. You stay in control of the wallet.
               The contract, not this site, decides paid.
             </p>
-            <Link to="/source" className="mt-3 inline-block text-sm underline decoration-line underline-offset-4">
+            <Link to="/docs" className="mt-3 inline-block text-sm underline decoration-line underline-offset-4">
               Source and contract
             </Link>
             <p className="mt-3 break-all font-mono text-xs text-faint">

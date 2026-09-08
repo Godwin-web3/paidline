@@ -53,6 +53,31 @@ export async function readInvoice(id: number): Promise<Invoice | null> {
   return mapInvoice(id, row as unknown as Record<string, unknown>);
 }
 
+export async function readSettled(limit = 12): Promise<Invoice[]> {
+  try {
+    const c = contract();
+    const p = provider();
+    const latest = await p.getBlockNumber();
+    const from = Math.max(0, latest - 4000);
+    const logs = await c.queryFilter(c.filters.InvoicePaid(), from);
+    const ids: number[] = [];
+    for (let i = logs.length - 1; i >= 0; i--) {
+      const log = logs[i] as { args?: { invoiceId?: bigint } };
+      const id = Number(log.args?.invoiceId ?? 0);
+      if (id > 0 && !ids.includes(id)) ids.push(id);
+      if (ids.length >= limit) break;
+    }
+    if (ids.length === 0) {
+      const next = Number(await c.nextInvoiceId());
+      for (let i = next - 1; i >= Math.max(1, next - 16) && ids.length < limit; i--) ids.push(i);
+    }
+    const rows = await Promise.all(ids.map((id) => readInvoice(id)));
+    return rows.filter((inv): inv is Invoice => inv !== null && inv.status === "paid");
+  } catch {
+    return [];
+  }
+}
+
 export async function readInvoices(merchant: string): Promise<Invoice[]> {
   const ids = (await contract().invoicesOf(merchant)) as bigint[];
   if (!ids.length) return [];

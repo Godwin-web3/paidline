@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { existsSync, readFileSync } from "node:fs";
 import { Contract, JsonRpcProvider, Wallet, zeroPadValue } from "ethers";
 import { PAIDLINE_ABI } from "./abi.ts";
-import { readInvoice, readInvoices } from "./chain.ts";
+import { readInvoice, readInvoices, readSettled } from "./chain.ts";
 import {
   CREDITCOIN_RPC,
   PAIDLINE_ADDRESS,
@@ -47,6 +47,76 @@ export const listInvoices = createServerFn({ method: "GET" })
       localAmount: inv.localAmount.toString(),
     }));
   });
+
+export const listSettled = createServerFn({ method: "GET" }).handler(async () => {
+  const rows = await readSettled(12);
+  return rows.map((inv) => ({
+    ...inv,
+    sourceAmount: inv.sourceAmount.toString(),
+    localAmount: inv.localAmount.toString(),
+  }));
+});
+
+export type GateBody =
+  | {
+      x402: true;
+      invoiceId: number;
+      status: "unpaid" | "cancelled" | "expired" | "missing";
+      amount: string | null;
+      pay: string;
+      isPaid: false;
+    }
+  | {
+      ok: true;
+      invoiceId: number;
+      title: string;
+      release: string;
+      sourceTx: string | null;
+      isPaid: true;
+    };
+
+export async function gateFor(invoiceId: number, origin: string): Promise<{ status: number; body: GateBody }> {
+  const invoice = await readInvoice(invoiceId);
+  const pay = `${origin}/pay/${invoiceId}`;
+  if (!invoice) {
+    return {
+      status: 404,
+      body: { x402: true, invoiceId, status: "missing", amount: null, pay, isPaid: false },
+    };
+  }
+  if (invoice.status === "paid") {
+    return {
+      status: 200,
+      body: {
+        ok: true,
+        invoiceId,
+        title: invoice.title,
+        release: invoice.releaseLabel,
+        sourceTx: invoice.paidTxHash,
+        isPaid: true,
+      },
+    };
+  }
+  return {
+    status: 402,
+    body: {
+      x402: true,
+      invoiceId,
+      status: invoice.status,
+      amount: invoice.sourceAmount.toString(),
+      pay,
+      isPaid: false,
+    },
+  };
+}
+
+export const getGate = createServerFn({ method: "GET" })
+  .validator((d: { id: number; origin: string }) => {
+    const id = Number(d?.id);
+    if (!Number.isInteger(id) || id < 1) throw new Error("Bad invoice id.");
+    return { id, origin: String(d.origin || "") };
+  })
+  .handler(async ({ data }) => gateFor(data.id, data.origin));
 
 export type ConfirmResult = {
   ok: boolean;

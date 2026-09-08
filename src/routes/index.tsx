@@ -3,12 +3,15 @@ import { ArrowRight, Check } from "lucide-react";
 import { useState } from "react";
 import { Mark } from "@/components/mark";
 import { ProductPreview } from "@/components/product-preview";
+import { SettledFeed } from "@/components/settled-feed";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InvoiceSheet } from "@/components/invoice-sheet";
 
-export const Route = createFileRoute("/")({ component: Home });
+export const Route = createFileRoute("/")({
+  component: Home,
+});
 
 function Home() {
   const navigate = useNavigate();
@@ -220,8 +223,8 @@ function Home() {
               Attestcoin.
             </p>
             <p className="mt-6">
-              <Link to="/how" className="text-sm underline decoration-line underline-offset-4">
-                How the contract checks
+              <Link to="/docs" className="text-sm underline decoration-line underline-offset-4">
+                Docs: how the contract checks
               </Link>
             </p>
           </div>
@@ -266,6 +269,43 @@ function Home() {
         </div>
       </section>
 
+      <section id="who" className="scroll-mt-20 border-b border-line">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <p className="text-xs uppercase tracking-wide text-muted">Who it is for</p>
+          <h2 className="mt-3 font-display text-4xl tracking-tight sm:text-5xl">
+            Anyone who needs a payment to mean something.
+          </h2>
+          <div className="mt-10 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["Seller on Creditcoin", "Invoice in USDC. The buyer pays on Ethereum. You watch pending become paid."],
+              ["Buyer who already has a wallet", "A number, an amount, an address. They send crypto the way they send it."],
+              ["Agent hitting an API", "402 until the invoice is stamped. 200 after. Retry. No new account."],
+              ["Another contract", "Call isPaid. Listen for InvoicePaid. Do not talk to Attestcoin yourself."],
+              ["A market that will not custody", "USDC never sits with an admin. The contract matches the transfer."],
+              ["A protocol gating work", "Unlock, mint, flip a role — after the stamp. The payment is the fact."],
+            ].map(([t, d]) => (
+              <article key={t} className="bg-surface p-6 sm:p-8">
+                <h3 className="font-display text-2xl tracking-tight">{t}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted">{d}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="settled" className="scroll-mt-20 border-b border-line">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <p className="text-xs uppercase tracking-wide text-muted">Live</p>
+          <h2 className="mt-3 font-display text-4xl tracking-tight sm:text-5xl">Recently settled</h2>
+          <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted">
+            Invoices the contract has stamped. No wallet required to watch. Each row is a receipt.
+          </p>
+          <div className="mt-8">
+            <SettledFeed />
+          </div>
+        </div>
+      </section>
+
       <section className="border-b border-line">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
           <p className="text-xs uppercase tracking-wide text-muted">Start</p>
@@ -289,12 +329,11 @@ function Home() {
                 decides.
               </p>
             </Link>
-            <Link to="/source" className="bg-surface p-6 transition-colors duration-150 hover:bg-raised sm:p-8">
+            <Link to="/docs" className="bg-surface p-6 transition-colors duration-150 hover:bg-raised sm:p-8">
               <p className="font-mono text-xs text-faint">03</p>
-              <h3 className="mt-3 font-display text-2xl tracking-tight">Source</h3>
+              <h3 className="mt-3 font-display text-2xl tracking-tight">Docs</h3>
               <p className="mt-3 text-sm leading-relaxed text-muted">
-                Contract, chains, isPaid. Other contracts call the checker. They do not talk to the
-                prover.
+                How it works, who it is for, isPaid, the x402 gate, and the live contract.
               </p>
             </Link>
           </div>

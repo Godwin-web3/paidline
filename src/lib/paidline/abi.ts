@@ -1,4 +1,5 @@
 export const PAIDLINE_ABI = [
+  "event InvoicePaid(uint256 indexed invoiceId, bytes32 indexed sourceTxHash, address indexed releasedTo, uint256 localAmount)",
   "function nextInvoiceId() view returns (uint256)",
   "function invoices(uint256) view returns (address merchant,uint256 chainKey,address sourceToken,address sourceRecipient,uint256 sourceAmount,uint64 expiry,uint256 localAmount,address localReleaseTo,uint8 status,bool funded,bytes32 paidTxHash,string title,string releaseLabel)",
   "function invoicesOf(address merchant) view returns (uint256[])",
