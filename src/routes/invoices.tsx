@@ -3,7 +3,6 @@ import { ArrowRight, Plus } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
-import { InvoiceSheet } from "@/components/invoice-sheet";
 import { SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { listInvoices } from "@/lib/paidline/invoices";
 import { useSession } from "@/lib/paidline/session";
@@ -41,73 +40,70 @@ function Invoices() {
   }, [address]);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl tracking-tight sm:text-5xl">Invoices</h1>
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
-            Issued from the connected wallet. Share the payment link. The invoice updates when the
-            USDC transfer is confirmed.
-          </p>
+          <p className="text-xs uppercase tracking-wide text-muted">Workspace</p>
+          <h1 className="mt-1 font-display text-2xl tracking-tight sm:text-3xl">Invoices</h1>
         </div>
         {address ? (
           <Link to="/new">
             <Button>
               <Plus className="size-4" strokeWidth={1.75} />
-              New invoice
+              New
             </Button>
           </Link>
         ) : null}
       </div>
 
-      {error ? <p className="mt-8 text-sm text-bad">{error}</p> : null}
-      {loadError ? <p className="mt-8 text-sm text-bad">{loadError}</p> : null}
+      {error ? <p className="mt-6 text-sm text-bad">{error}</p> : null}
+      {loadError ? <p className="mt-6 text-sm text-bad">{loadError}</p> : null}
 
       {!ready ? (
-        <p className="mt-12 text-sm text-muted">Loading…</p>
+        <p className="mt-10 text-sm text-muted">Loading…</p>
       ) : !address ? (
         <EmptyPanel
           title="Connect the wallet you issue from"
-          body="Invoices live on Creditcoin. This list is yours, not a shared board."
+          body="This list is yours. Invoices live on Creditcoin, keyed to the connected address."
         >
           <Button onClick={() => void connect()}>Connect wallet</Button>
         </EmptyPanel>
       ) : invoices === null && !loadError ? (
-        <p className="mt-12 text-sm text-muted">Reading your invoices…</p>
+        <p className="mt-10 text-sm text-muted">Reading invoices…</p>
       ) : invoices && invoices.length === 0 ? (
         <EmptyPanel
           title="No invoices yet"
-          body="Issue one. You get a payment link. The buyer sends USDC. This page updates when it clears."
+          body="Issue one. Share the payment link. This list updates when the USDC clears."
         >
           <Link to="/new">
             <Button>Issue invoice</Button>
           </Link>
         </EmptyPanel>
       ) : invoices ? (
-        <ul className="mt-10 grid gap-3">
+        <ul className="mt-8 overflow-hidden rounded-lg border border-line bg-surface">
           {invoices.map((inv) => (
-            <li key={inv.id}>
-              <Link to="/invoice/$id" params={{ id: String(inv.id) }}>
-                <InvoiceSheet className="px-5 py-4 transition-transform duration-150 ease-out hover:-translate-y-0.5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="truncate font-display text-xl tracking-tight text-ink">
-                        #{inv.id}
-                        <span className="ml-2 font-sans text-sm font-medium">{inv.title}</span>
-                      </p>
-                      <p className="mt-1 text-xs text-ink-muted">
-                        {formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)} USDC
-                        {inv.status === "unpaid" || inv.status === "expired"
-                          ? ` · ${formatDue(inv.expiry)}`
-                          : ""}
-                      </p>
-                    </div>
-                    <span className="flex items-center gap-3">
-                      <StatusPill status={inv.status} />
-                      <ArrowRight className="size-4 text-ink-muted" strokeWidth={1.5} />
-                    </span>
-                  </div>
-                </InvoiceSheet>
+            <li key={inv.id} className="border-b border-line last:border-b-0">
+              <Link
+                to="/invoice/$id"
+                params={{ id: String(inv.id) }}
+                className="flex items-center justify-between gap-4 px-4 py-3.5 transition-colors duration-150 hover:bg-raised"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm">
+                    <span className="font-mono text-xs text-muted">#{inv.id}</span>
+                    <span className="ml-2 font-medium">{inv.title}</span>
+                  </p>
+                  <p className="mt-0.5 font-mono text-xs text-muted">
+                    {formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)} USDC
+                    {inv.status === "unpaid" || inv.status === "expired"
+                      ? ` · ${formatDue(inv.expiry)}`
+                      : ""}
+                  </p>
+                </div>
+                <span className="flex items-center gap-3">
+                  <StatusPill status={inv.status} />
+                  <ArrowRight className="size-4 text-faint" strokeWidth={1.5} />
+                </span>
               </Link>
             </li>
           ))}
@@ -127,17 +123,10 @@ function EmptyPanel({
   children: ReactNode;
 }) {
   return (
-    <div className="mt-12 overflow-hidden rounded-2xl border border-line bg-surface">
-      <img
-        src="/brand/specimen.jpg"
-        alt=""
-        className="h-40 w-full object-cover opacity-80"
-      />
-      <div className="px-6 py-10 text-center">
-        <p className="font-display text-3xl tracking-tight">{title}</p>
-        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">{body}</p>
-        <div className="mt-6">{children}</div>
-      </div>
+    <div className="mt-8 rounded-lg border border-line bg-surface px-5 py-8">
+      <p className="font-medium">{title}</p>
+      <p className="mt-1 max-w-md text-sm leading-relaxed text-muted">{body}</p>
+      <div className="mt-5">{children}</div>
     </div>
   );
 }

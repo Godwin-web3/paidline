@@ -22,6 +22,8 @@
   --color-paid: #8fad8a;
   --color-warn: #c4b58a;
   --color-bad: #c98980;
+  --color-hero: #efe6d8;
+  --color-hero-muted: #cfc4b4;
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -35,12 +37,35 @@
   --shadow-sheet: 0 24px 48px -28px rgb(0 0 0 / 0.55);
 }
 
+html.light {
+  color-scheme: light;
+  --color-bg: #f3ebe0;
+  --color-surface: #ece3d4;
+  --color-raised: #e4d9c8;
+  --color-fg: #16120e;
+  --color-muted: #6a6258;
+  --color-faint: #8a8176;
+  --color-line: #d9d0c0;
+  --color-line-strong: #c4b9a6;
+  --color-accent: #16120e;
+  --color-accent-fg: #f3ebe0;
+  --color-paper: #faf6ee;
+  --color-ink: #16120e;
+  --color-ink-muted: #6a6258;
+  --color-rule: #ddd4c4;
+  --color-paid: #3f6b45;
+  --color-warn: #8a6b2b;
+  --color-bad: #9a4a42;
+  --shadow-sheet: 0 20px 40px -24px rgb(20 17 14 / 0.25);
+}
+
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background: var(--color-bg);
     color: var(--color-fg);
+    color-scheme: dark;
   }
 
   body {
@@ -84,6 +109,20 @@
     mix-blend-mode: overlay;
     background-image: url("/brand/paper.jpg");
     background-size: 420px;
+  }
+
+  html.light .grain {
+    opacity: 0.045;
+    mix-blend-mode: multiply;
+  }
+
+  .hero-scrim {
+    background: linear-gradient(
+      to top,
+      #14110e 0%,
+      rgb(20 17 14 / 0.58) 45%,
+      rgb(20 17 14 / 0.22) 100%
+    );
   }
 
   .paid-rule {

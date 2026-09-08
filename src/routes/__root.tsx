@@ -6,6 +6,8 @@ import appCss from "../styles.css?url";
 
 const APP_NAME = "Paidline";
 
+const THEME_BOOT = `(function(){try{var t=localStorage.getItem("paidline-theme");if(t!=="light"&&t!=="dark"){t=window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"}document.documentElement.classList.add(t);document.documentElement.dataset.theme=t;if(t==="light"){var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content","#f3ebe0")}}catch(e){document.documentElement.classList.add("dark")}})();`;
+
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -39,6 +41,7 @@ export const Route = createRootRoute({
     <html lang="en" className="antialiased" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
       <body>
         <PreviewHostBridge />

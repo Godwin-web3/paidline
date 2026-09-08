@@ -17,11 +17,24 @@ export function Mark({ className }: { className?: string }) {
   );
 }
 
-export function Wordmark({ className }: { className?: string }) {
+export function Wordmark({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   return (
     <span className={cn("inline-flex items-center gap-2.5 text-fg", className)}>
-      <Mark className="size-8" />
-      <span className="font-display text-xl leading-none tracking-tight">Paidline</span>
+      <Mark className={compact ? "size-7" : "size-8"} />
+      <span
+        className={cn(
+          "font-display leading-none tracking-tight",
+          compact ? "text-lg" : "text-xl",
+        )}
+      >
+        Paidline
+      </span>
     </span>
   );
 }

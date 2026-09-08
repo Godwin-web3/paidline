@@ -93,7 +93,7 @@ function BuyerPay() {
   }
 
   return (
-    <main className="mx-auto max-w-md px-4 py-10 sm:py-16">
+    <main className="mx-auto max-w-md px-4 py-8 sm:py-10">
       <InvoiceSheet className="p-6 sm:p-8">
         <p className="text-xs uppercase tracking-wide text-ink-muted">Invoice #{invoice.id}</p>
         <h1 className="mt-3 font-display text-4xl tracking-tight text-ink">{invoice.title}</h1>

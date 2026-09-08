@@ -79,17 +79,17 @@ function NewInvoice() {
   }
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-10 sm:px-6 sm:py-14">
-      <p className="text-xs uppercase tracking-wide text-muted">Issue</p>
-      <h1 className="mt-2 font-display text-4xl tracking-tight">New invoice</h1>
-      <p className="mt-3 text-sm leading-relaxed text-muted">
-        This writes to Creditcoin. The buyer pays USDC on Ethereum to{" "}
+    <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
+      <p className="text-xs uppercase tracking-wide text-muted">Workspace</p>
+      <h1 className="mt-1 font-display text-2xl tracking-tight sm:text-3xl">New invoice</h1>
+      <p className="mt-2 text-sm leading-relaxed text-muted">
+        Writes to Creditcoin. Buyer pays USDC on Ethereum to{" "}
         {address ? (
           <span className="font-mono text-fg">{shortAddr(address, 4)}</span>
         ) : (
           "the connected wallet"
         )}
-        . Creditcoin you lock is released to whoever paid.
+        . Locked Creditcoin releases to whoever paid.
       </p>
 
       <InvoiceSheet className="mt-8 p-6 sm:p-8">

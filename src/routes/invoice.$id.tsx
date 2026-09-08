@@ -84,7 +84,14 @@ function SellerInvoice() {
   }
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-10 sm:px-6 sm:py-14">
+    <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
+      <p className="mb-4 text-xs uppercase tracking-wide text-muted">
+        <Link to="/invoices" className="hover:text-fg">
+          Workspace
+        </Link>
+        <span className="mx-2 text-faint">/</span>
+        Invoice #{invoice.id}
+      </p>
       <InvoiceSheet className="p-6 sm:p-8">
         <div className="flex items-start justify-between gap-3">
           <div>

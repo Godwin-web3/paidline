@@ -40,16 +40,16 @@ function HowPage() {
         <img
           src="/brand/hero.jpg"
           alt="A steel hallmark stamp above a cream invoice"
-          className="absolute inset-0 h-full w-full object-cover opacity-50"
+          className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/80 to-bg/40" />
+        <div className="absolute inset-0 hero-scrim" />
         <div className="relative mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
-          <p className="text-xs uppercase tracking-wide text-accent">How it works</p>
-          <h1 className="mt-3 max-w-xl font-display text-5xl tracking-tight sm:text-6xl">
+          <p className="text-xs uppercase tracking-wide text-hero-muted">How it works</p>
+          <h1 className="mt-3 max-w-xl font-display text-5xl tracking-tight text-hero sm:text-6xl">
             Remote proof.
             <span className="block italic">Local action.</span>
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-accent/90">
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-hero-muted">
             The seller sees an invoice. The buyer sees a payment page. Underneath, Paidline checks
             that a USDC transfer happened on Ethereum, then releases what you locked on Creditcoin.
           </p>

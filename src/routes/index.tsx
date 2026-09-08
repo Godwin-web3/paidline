@@ -46,14 +46,14 @@ function Home() {
           alt="A steel hallmark stamp held above a cream invoice on walnut"
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/55 to-bg/20" />
+        <div className="absolute inset-0 hero-scrim" />
         <div className="relative mx-auto flex min-h-[88svh] max-w-6xl flex-col justify-end px-4 pb-14 pt-24 sm:px-6 sm:pb-20">
-          <p className="text-xs uppercase tracking-wide text-accent">The assay for a payment</p>
-          <h1 className="mt-4 max-w-3xl font-display text-5xl leading-[0.95] tracking-tight sm:text-7xl lg:text-8xl">
+          <p className="text-xs uppercase tracking-wide text-hero-muted">The assay for a payment</p>
+          <h1 className="mt-4 max-w-3xl font-display text-5xl leading-[0.95] tracking-tight text-hero sm:text-7xl lg:text-8xl">
             Send the invoice.
             <span className="block italic">Then it is paid.</span>
           </h1>
-          <p className="mt-6 max-w-md text-base leading-relaxed text-accent/90">
+          <p className="mt-6 max-w-md text-base leading-relaxed text-hero-muted">
             You issue on Creditcoin. The buyer sends USDC on Ethereum. Paidline marks the invoice
             paid only when that transfer is verified. A server is not allowed to say it landed.
           </p>
@@ -65,7 +65,7 @@ function Home() {
               </Button>
             </Link>
             <a href="#pay">
-              <Button size="lg" variant="ghost" className="w-full border-accent/30 sm:w-auto">
+              <Button size="lg" variant="ghost" className="w-full border-hero/30 text-hero sm:w-auto">
                 Pay an invoice
               </Button>
             </a>
