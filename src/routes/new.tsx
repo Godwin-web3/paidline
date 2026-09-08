@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
-import { InvoiceSheet } from "@/components/invoice-sheet";
+import { InvoiceSheet, SheetMeta } from "@/components/invoice-sheet";
 import { LOCAL_DECIMALS, SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { useSession } from "@/lib/paidline/session";
 import { createOnchainInvoice, hasWallet } from "@/lib/paidline/wallet";
@@ -78,12 +78,15 @@ function NewInvoice() {
     setBusy(false);
   }
 
+  const dueLabel = DUE_OPTIONS.find((o) => o.hours === hours)?.label ?? "7 days";
+
   return (
-    <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
-      <h1 className="font-display text-2xl tracking-tight sm:text-3xl">Create invoice</h1>
-      <p className="mt-2 text-sm leading-relaxed text-muted">
-        Name the work, the USDC the buyer sends on Ethereum, and what you release. Lock Creditcoin
-        so it is sitting ready. You get a payment link.
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+      <p className="text-xs uppercase tracking-wide text-muted">Issue</p>
+      <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Write the invoice</h1>
+      <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
+        Name the work, the USDC the buyer sends on Ethereum, and what you lock. The sheet on the
+        right is what they will see.
         {address ? (
           <>
             {" "}
@@ -92,79 +95,109 @@ function NewInvoice() {
         ) : null}
       </p>
 
-      <InvoiceSheet className="mt-8 p-6 sm:p-8">
-        <form onSubmit={(e) => void onCreate(e)} className="grid gap-5">
-          <Field label="What you are selling" paper>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="border-rule bg-paper font-sans text-ink placeholder:text-ink-muted"
-              placeholder="September retainer"
-              autoComplete="off"
-            />
-          </Field>
-          <Field
-            paper
-            label="Price in USDC"
-            hint="Buyer sends this exact amount on Ethereum. You cannot have two open invoices for the same amount to this wallet."
-          >
-            <Input
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              inputMode="decimal"
-              placeholder="250.00"
-              className="border-rule bg-paper text-ink placeholder:text-ink-muted"
-            />
-          </Field>
-          <Field label="What they receive" paper>
-            <Input
-              value={releaseLabel}
-              onChange={(e) => setReleaseLabel(e.target.value)}
-              className="border-rule bg-paper font-sans text-ink placeholder:text-ink-muted"
-              placeholder="Delivery of the work"
-              autoComplete="off"
-            />
-          </Field>
-          <Field
-            paper
-            label="Creditcoin to lock"
-            hint="Released to the paying wallet when the USDC transfer is confirmed."
-          >
-            <Input
-              value={escrow}
-              onChange={(e) => setEscrow(e.target.value)}
-              inputMode="decimal"
-              placeholder="0.01"
-              className="border-rule bg-paper text-ink placeholder:text-ink-muted"
-            />
-          </Field>
-          <Field label="Due" paper>
-            <div className="flex flex-wrap gap-2">
-              {DUE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.hours}
-                  type="button"
-                  onClick={() => setHours(opt.hours)}
-                  className={
-                    hours === opt.hours
-                      ? "h-11 rounded-md bg-ink px-4 text-sm text-paper"
-                      : "h-11 rounded-md border border-rule px-4 text-sm text-ink-muted hover:text-ink"
-                  }
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </Field>
-          {error ? <p className="text-sm text-bad">{error}</p> : null}
-          <Button type="submit" size="lg" variant="ink" disabled={busy}>
-            {busy ? "Waiting on wallet…" : "Create invoice"}
-          </Button>
-        </form>
-      </InvoiceSheet>
+      <div className="mt-8 grid items-start gap-8 lg:grid-cols-2">
+        <InvoiceSheet className="p-6 sm:p-8">
+          <form onSubmit={(e) => void onCreate(e)} className="grid gap-5">
+            <Field label="What you are selling" paper>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="border-rule bg-paper font-sans text-ink placeholder:text-ink-muted"
+                placeholder="September retainer"
+                autoComplete="off"
+              />
+            </Field>
+            <Field
+              paper
+              label="Price in USDC"
+              hint="Buyer sends this exact amount on Ethereum. You cannot have two open invoices for the same amount to this wallet."
+            >
+              <Input
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                inputMode="decimal"
+                placeholder="250.00"
+                className="border-rule bg-paper text-ink placeholder:text-ink-muted"
+              />
+            </Field>
+            <Field label="What they receive" paper>
+              <Input
+                value={releaseLabel}
+                onChange={(e) => setReleaseLabel(e.target.value)}
+                className="border-rule bg-paper font-sans text-ink placeholder:text-ink-muted"
+                placeholder="Delivery of the work"
+                autoComplete="off"
+              />
+            </Field>
+            <Field
+              paper
+              label="Creditcoin to lock"
+              hint="Released to the paying wallet when the USDC transfer is confirmed."
+            >
+              <Input
+                value={escrow}
+                onChange={(e) => setEscrow(e.target.value)}
+                inputMode="decimal"
+                placeholder="0.01"
+                className="border-rule bg-paper text-ink placeholder:text-ink-muted"
+              />
+            </Field>
+            <Field label="Due" paper>
+              <div className="flex flex-wrap gap-2">
+                {DUE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.hours}
+                    type="button"
+                    onClick={() => setHours(opt.hours)}
+                    className={
+                      hours === opt.hours
+                        ? "h-11 rounded-md bg-ink px-4 text-sm text-paper"
+                        : "h-11 rounded-md border border-rule px-4 text-sm text-ink-muted hover:text-ink"
+                    }
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            {error ? <p className="text-sm text-bad">{error}</p> : null}
+            <Button type="submit" size="lg" variant="ink" disabled={busy}>
+              {busy ? "Waiting on wallet…" : "Create invoice"}
+            </Button>
+          </form>
+        </InvoiceSheet>
+
+        <div className="lg:sticky lg:top-8">
+          <p className="mb-3 text-xs uppercase tracking-wide text-muted">What the buyer opens</p>
+          <InvoiceSheet className="p-6 sm:p-8">
+            <p className="text-xs uppercase tracking-wide text-ink-muted">Invoice</p>
+            <h2 className="mt-2 font-display text-4xl tracking-tight text-ink">
+              {title.trim() || "Untitled work"}
+            </h2>
+            <dl className="mt-8 grid gap-5">
+              <SheetMeta label="Amount due">
+                <span className="font-display text-5xl tabular-nums tracking-tight">
+                  {price.trim() || "0.00"}
+                  <span className="ml-2 text-xl text-ink-muted">USDC</span>
+                </span>
+              </SheetMeta>
+              <SheetMeta label="You receive">{releaseLabel.trim() || "—"}</SheetMeta>
+              <SheetMeta label="Pay to">
+                <span className="font-mono text-xs">
+                  {address ? shortAddr(address, 6) : "Connect to set destination"}
+                </span>
+              </SheetMeta>
+              <SheetMeta label="Due">{dueLabel}</SheetMeta>
+              <SheetMeta label="Locked">
+                {escrow.trim() ? `${escrow.trim()} tCTC` : "—"}
+              </SheetMeta>
+            </dl>
+          </InvoiceSheet>
+        </div>
+      </div>
       <p className="mt-6 text-center text-xs text-faint">
         <Link to="/invoices" className="underline decoration-line underline-offset-4">
-          Back to invoices
+          Back to the blotter
         </Link>
       </p>
     </main>

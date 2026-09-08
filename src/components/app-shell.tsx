@@ -9,7 +9,7 @@ import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const WORK_NAV = [
-  { to: "/invoices", label: "Invoices", icon: FileText },
+  { to: "/invoices", label: "Blotter", icon: FileText },
   { to: "/new", label: "Issue", icon: Plus },
   { to: "/pay", label: "Pay", icon: Search },
   { to: "/how", label: "How", icon: BookOpen },
@@ -109,7 +109,7 @@ function WorkSidebar({ pathname }: { pathname: string }) {
       <Link to="/" aria-label="Paidline home" className="flex min-h-14 items-center px-4">
         <Wordmark compact />
       </Link>
-      <p className="px-4 pb-3 text-[11px] uppercase tracking-wide text-faint">Menu</p>
+      <p className="px-4 pb-3 text-[11px] uppercase tracking-wide text-faint">Desk</p>
       <nav className="flex flex-col gap-1 px-2">
         {WORK_NAV.map((item) => {
           const active = isActive(item.to, pathname);
