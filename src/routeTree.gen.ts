@@ -10,19 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DocsRouteImport } from './routes/docs'
 import { Route as HowRouteImport } from './routes/how'
 import { Route as InvoicesRouteImport } from './routes/invoices'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as MechanismRouteImport } from './routes/mechanism'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as SourceRouteImport } from './routes/source'
+import { Route as GateIndexRouteImport } from './routes/gate.index'
+import { Route as GateIdRouteImport } from './routes/gate.$id'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as PayIndexRouteImport } from './routes/pay.index'
 import { Route as PayIdRouteImport } from './routes/pay.$id'
+import { Route as ReceiptIdRouteImport } from './routes/receipt.$id'
+import { Route as ApiGateIdRouteImport } from './routes/api/gate.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowRoute = HowRouteImport.update({
@@ -55,6 +65,16 @@ const SourceRoute = SourceRouteImport.update({
   path: '/source',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GateIndexRoute = GateIndexRouteImport.update({
+  id: '/gate/',
+  path: '/gate/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GateIdRoute = GateIdRouteImport.update({
+  id: '/gate/$id',
+  path: '/gate/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InvoiceIdRoute = InvoiceIdRouteImport.update({
   id: '/invoice/$id',
   path: '/invoice/$id',
@@ -70,94 +90,139 @@ const PayIdRoute = PayIdRouteImport.update({
   path: '/pay/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReceiptIdRoute = ReceiptIdRouteImport.update({
+  id: '/receipt/$id',
+  path: '/receipt/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGateIdRoute = ApiGateIdRouteImport.update({
+  id: '/api/gate/$id',
+  path: '/api/gate/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/docs': typeof DocsRoute
   '/how': typeof HowRoute
   '/invoices': typeof InvoicesRoute
   '/lab': typeof LabRoute
   '/mechanism': typeof MechanismRoute
   '/new': typeof NewRoute
   '/source': typeof SourceRoute
+  '/gate/$id': typeof GateIdRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/pay/$id': typeof PayIdRoute
+  '/receipt/$id': typeof ReceiptIdRoute
+  '/gate/': typeof GateIndexRoute
   '/pay/': typeof PayIndexRoute
+  '/api/gate/$id': typeof ApiGateIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/docs': typeof DocsRoute
   '/how': typeof HowRoute
   '/invoices': typeof InvoicesRoute
   '/lab': typeof LabRoute
   '/mechanism': typeof MechanismRoute
   '/new': typeof NewRoute
   '/source': typeof SourceRoute
+  '/gate/$id': typeof GateIdRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/pay/$id': typeof PayIdRoute
+  '/receipt/$id': typeof ReceiptIdRoute
+  '/gate': typeof GateIndexRoute
   '/pay': typeof PayIndexRoute
+  '/api/gate/$id': typeof ApiGateIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/docs': typeof DocsRoute
   '/how': typeof HowRoute
   '/invoices': typeof InvoicesRoute
   '/lab': typeof LabRoute
   '/mechanism': typeof MechanismRoute
   '/new': typeof NewRoute
   '/source': typeof SourceRoute
+  '/gate/$id': typeof GateIdRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/pay/$id': typeof PayIdRoute
+  '/receipt/$id': typeof ReceiptIdRoute
+  '/gate/': typeof GateIndexRoute
   '/pay/': typeof PayIndexRoute
+  '/api/gate/$id': typeof ApiGateIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/docs'
     | '/how'
     | '/invoices'
     | '/lab'
     | '/mechanism'
     | '/new'
     | '/source'
+    | '/gate/$id'
     | '/invoice/$id'
     | '/pay/$id'
+    | '/receipt/$id'
+    | '/gate/'
     | '/pay/'
+    | '/api/gate/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/docs'
     | '/how'
     | '/invoices'
     | '/lab'
     | '/mechanism'
     | '/new'
     | '/source'
+    | '/gate/$id'
     | '/invoice/$id'
     | '/pay/$id'
+    | '/receipt/$id'
+    | '/gate'
     | '/pay'
+    | '/api/gate/$id'
   id:
     | '__root__'
     | '/'
+    | '/docs'
     | '/how'
     | '/invoices'
     | '/lab'
     | '/mechanism'
     | '/new'
     | '/source'
+    | '/gate/$id'
     | '/invoice/$id'
     | '/pay/$id'
+    | '/receipt/$id'
+    | '/gate/'
     | '/pay/'
+    | '/api/gate/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DocsRoute: typeof DocsRoute
   HowRoute: typeof HowRoute
   InvoicesRoute: typeof InvoicesRoute
   LabRoute: typeof LabRoute
   MechanismRoute: typeof MechanismRoute
   NewRoute: typeof NewRoute
   SourceRoute: typeof SourceRoute
+  GateIdRoute: typeof GateIdRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
   PayIdRoute: typeof PayIdRoute
+  ReceiptIdRoute: typeof ReceiptIdRoute
+  GateIndexRoute: typeof GateIndexRoute
   PayIndexRoute: typeof PayIndexRoute
+  ApiGateIdRoute: typeof ApiGateIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -167,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how': {
@@ -211,6 +283,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SourceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/gate/': {
+      id: '/gate/'
+      path: '/gate'
+      fullPath: '/gate/'
+      preLoaderRoute: typeof GateIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gate/$id': {
+      id: '/gate/$id'
+      path: '/gate/$id'
+      fullPath: '/gate/$id'
+      preLoaderRoute: typeof GateIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invoice/$id': {
       id: '/invoice/$id'
       path: '/invoice/$id'
@@ -232,20 +318,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PayIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/receipt/$id': {
+      id: '/receipt/$id'
+      path: '/receipt/$id'
+      fullPath: '/receipt/$id'
+      preLoaderRoute: typeof ReceiptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/gate/$id': {
+      id: '/api/gate/$id'
+      path: '/api/gate/$id'
+      fullPath: '/api/gate/$id'
+      preLoaderRoute: typeof ApiGateIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DocsRoute: DocsRoute,
   HowRoute: HowRoute,
   InvoicesRoute: InvoicesRoute,
   LabRoute: LabRoute,
   MechanismRoute: MechanismRoute,
   NewRoute: NewRoute,
   SourceRoute: SourceRoute,
+  GateIdRoute: GateIdRoute,
   InvoiceIdRoute: InvoiceIdRoute,
   PayIdRoute: PayIdRoute,
+  ReceiptIdRoute: ReceiptIdRoute,
+  GateIndexRoute: GateIndexRoute,
   PayIndexRoute: PayIndexRoute,
+  ApiGateIdRoute: ApiGateIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
