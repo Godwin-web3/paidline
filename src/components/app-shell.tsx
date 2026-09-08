@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { FileText, Plus } from "lucide-react";
+import { BookOpen, FileText, Plus, Search } from "lucide-react";
 import { useEffect } from "react";
-import { Wordmark } from "@/components/mark";
+import { Mark, Wordmark } from "@/components/mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { WalletButton } from "@/components/wallet-button";
 import { useSession } from "@/lib/paidline/session";
@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 const WORK_NAV = [
   { to: "/invoices", label: "Invoices", icon: FileText },
   { to: "/new", label: "Issue", icon: Plus },
+  { to: "/pay", label: "Pay", icon: Search },
+  { to: "/how", label: "How", icon: BookOpen },
 ] as const;
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -21,8 +23,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const work =
     pathname.startsWith("/invoices") ||
     pathname.startsWith("/new") ||
-    pathname.startsWith("/invoice");
-  const story = pathname === "/" || pathname.startsWith("/how");
+    pathname.startsWith("/invoice") ||
+    pathname === "/pay" ||
+    pathname.startsWith("/how");
+  const story = pathname === "/";
 
   useEffect(() => {
     hydrate();
@@ -56,34 +60,47 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 Workspace
               </NavLink>
             </nav>
+            <Link to="/new">
+              <ButtonGhost>Issue</ButtonGhost>
+            </Link>
             <ThemeToggle />
           </TopBar>
         ) : null}
         {work ? (
-          <TopBar compact className="md:hidden">
-            <nav className="flex items-center gap-1">
-              {WORK_NAV.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  active={
-                    item.to === "/invoices"
-                      ? pathname === "/invoices" || pathname.startsWith("/invoice/")
-                      : pathname === item.to
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
-            <WalletButton />
-            <ThemeToggle />
-          </TopBar>
+          <header className="relative z-10 border-b border-line bg-bg md:hidden">
+            <div className="flex min-w-0 items-center gap-2 px-3 py-2">
+              <Link to="/" aria-label="Paidline home" className="shrink-0">
+                <Mark className="size-7" />
+              </Link>
+              <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
+                {WORK_NAV.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    active={isActive(item.to, pathname)}
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </nav>
+              <div className="flex shrink-0 items-center gap-1">
+                <WalletButton compact />
+                <ThemeToggle />
+              </div>
+            </div>
+          </header>
         ) : null}
         {children}
       </div>
     </div>
   );
+}
+
+function isActive(to: (typeof WORK_NAV)[number]["to"], pathname: string) {
+  if (to === "/invoices") return pathname === "/invoices" || pathname.startsWith("/invoice/");
+  if (to === "/pay") return pathname === "/pay" || pathname.startsWith("/pay/");
+  if (to === "/how") return pathname.startsWith("/how");
+  return pathname === to;
 }
 
 function WorkSidebar({ pathname }: { pathname: string }) {
@@ -92,13 +109,10 @@ function WorkSidebar({ pathname }: { pathname: string }) {
       <Link to="/" aria-label="Paidline home" className="flex min-h-14 items-center px-4">
         <Wordmark compact />
       </Link>
-      <p className="px-4 pb-3 text-[11px] uppercase tracking-wide text-faint">Workspace</p>
+      <p className="px-4 pb-3 text-[11px] uppercase tracking-wide text-faint">Menu</p>
       <nav className="flex flex-col gap-1 px-2">
         {WORK_NAV.map((item) => {
-          const active =
-            item.to === "/invoices"
-              ? pathname === "/invoices" || pathname.startsWith("/invoice/")
-              : pathname === item.to;
+          const active = isActive(item.to, pathname);
           const Icon = item.icon;
           return (
             <Link
@@ -143,7 +157,7 @@ function TopBar({
           compact ? "py-2.5" : "py-4",
         )}
       >
-        <Link to="/" aria-label="Paidline home" className="min-h-11 inline-flex items-center">
+        <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 items-center">
           <Wordmark compact={compact} />
         </Link>
         <div className="flex items-center gap-1 sm:gap-2">{children}</div>
@@ -157,7 +171,7 @@ function NavLink({
   active,
   children,
 }: {
-  to: "/how" | "/invoices" | "/new";
+  to: "/how" | "/invoices" | "/new" | "/pay";
   active: boolean;
   children: React.ReactNode;
 }) {
@@ -165,11 +179,19 @@ function NavLink({
     <Link
       to={to}
       className={cn(
-        "inline-flex min-h-11 items-center rounded-md px-3 text-sm transition-colors duration-150",
+        "inline-flex min-h-11 items-center rounded-md px-2.5 text-sm whitespace-nowrap transition-colors duration-150 sm:px-3",
         active ? "bg-raised text-fg" : "text-muted hover:text-fg",
       )}
     >
       {children}
     </Link>
+  );
+}
+
+function ButtonGhost({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex min-h-11 items-center rounded-md border border-line px-3 text-sm text-fg transition-colors duration-150 hover:bg-raised">
+      {children}
+    </span>
   );
 }

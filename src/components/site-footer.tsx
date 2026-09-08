@@ -12,19 +12,22 @@ export function SiteFooter() {
             <div>
               <p className="font-display text-2xl tracking-tight">Paidline</p>
               <p className="mt-1 max-w-xs text-sm leading-relaxed text-muted">
-                Remote proof. Local action. A payment is not a fact until the contract says so.
+                A payment is not a fact until the contract says so.
               </p>
             </div>
           </div>
           <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
-            <a href="/#product" className="hover:text-fg">
-              Product
-            </a>
-            <Link to="/how" className="hover:text-fg">
-              How
+            <Link to="/new" className="hover:text-fg">
+              Issue
+            </Link>
+            <Link to="/pay" className="hover:text-fg">
+              Pay
             </Link>
             <Link to="/invoices" className="hover:text-fg">
               Workspace
+            </Link>
+            <Link to="/how" className="hover:text-fg">
+              How
             </Link>
             <a
               href={`${CREDITCOIN_EXPLORER}/address/${PAIDLINE_ADDRESS}`}

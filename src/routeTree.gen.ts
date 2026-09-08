@@ -17,6 +17,7 @@ import { Route as MechanismRouteImport } from './routes/mechanism'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as SourceRouteImport } from './routes/source'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
+import { Route as PayIndexRouteImport } from './routes/pay.index'
 import { Route as PayIdRouteImport } from './routes/pay.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,11 @@ const InvoiceIdRoute = InvoiceIdRouteImport.update({
   path: '/invoice/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PayIndexRoute = PayIndexRouteImport.update({
+  id: '/pay/',
+  path: '/pay/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PayIdRoute = PayIdRouteImport.update({
   id: '/pay/$id',
   path: '/pay/$id',
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/source': typeof SourceRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/pay/$id': typeof PayIdRoute
+  '/pay/': typeof PayIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/source': typeof SourceRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/pay/$id': typeof PayIdRoute
+  '/pay': typeof PayIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +106,7 @@ export interface FileRoutesById {
   '/source': typeof SourceRoute
   '/invoice/$id': typeof InvoiceIdRoute
   '/pay/$id': typeof PayIdRoute
+  '/pay/': typeof PayIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/source'
     | '/invoice/$id'
     | '/pay/$id'
+    | '/pay/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/source'
     | '/invoice/$id'
     | '/pay/$id'
+    | '/pay'
   id:
     | '__root__'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/source'
     | '/invoice/$id'
     | '/pay/$id'
+    | '/pay/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +157,7 @@ export interface RootRouteChildren {
   SourceRoute: typeof SourceRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
   PayIdRoute: typeof PayIdRoute
+  PayIndexRoute: typeof PayIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvoiceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pay/': {
+      id: '/pay/'
+      path: '/pay'
+      fullPath: '/pay/'
+      preLoaderRoute: typeof PayIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pay/$id': {
       id: '/pay/$id'
       path: '/pay/$id'
@@ -225,6 +245,7 @@ const rootRouteChildren: RootRouteChildren = {
   SourceRoute: SourceRoute,
   InvoiceIdRoute: InvoiceIdRoute,
   PayIdRoute: PayIdRoute,
+  PayIndexRoute: PayIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
