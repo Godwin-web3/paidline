@@ -9,9 +9,9 @@ import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const APP_NAV = [
+  { to: "/pay", label: "Marketplace", icon: ShoppingBag },
   { to: "/invoices", label: "Listings", icon: FileText },
   { to: "/new", label: "New listing", icon: Plus },
-  { to: "/pay", label: "Marketplace", icon: ShoppingBag },
   { to: "/gate", label: "API", icon: Code2 },
 ] as const;
 
@@ -80,7 +80,7 @@ function LandingBar() {
           >
             Docs
           </Link>
-          <Link to="/invoices">
+          <Link to="/pay">
             <span className="inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg transition-opacity duration-150 hover:opacity-90">
               Open app
             </span>
@@ -111,7 +111,7 @@ function DocsBar() {
           >
             Marketplace
           </Link>
-          <Link to="/invoices">
+          <Link to="/pay">
             <span className="inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg">
               Open app
             </span>
@@ -142,7 +142,7 @@ function TicketBar({ pathname }: { pathname: string }) {
             Marketplace
           </Link>
           <Link
-            to="/invoices"
+            to="/pay"
             className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-fg"
           >
             App

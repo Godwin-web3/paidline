@@ -1,17 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { PaperSlip } from "@/components/paper-slip";
-import { SettlementPath, type DeskPhase } from "@/components/settlement-path";
-import { StatusStrip } from "@/components/status-strip";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  CREDITCOIN_EXPLORER,
-  PAIDLINE_ADDRESS,
-  SOURCE_DECIMALS,
-} from "@/lib/paidline/constants";
+import { SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { listInvoices } from "@/lib/paidline/invoices";
 import { useSession } from "@/lib/paidline/session";
 import type { InvoiceWire } from "@/lib/paidline/types";
@@ -20,14 +13,12 @@ import { formatDue, formatUnits, shortAddr } from "@/lib/utils";
 export const Route = createFileRoute("/invoices")({ component: Invoices });
 
 function Invoices() {
-  const navigate = useNavigate();
   const address = useSession((s) => s.address);
   const ready = useSession((s) => s.ready);
   const connect = useSession((s) => s.connect);
   const error = useSession((s) => s.error);
   const [invoices, setInvoices] = useState<InvoiceWire[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [lookup, setLookup] = useState("");
 
   useEffect(() => {
     if (!address) {
@@ -51,28 +42,12 @@ function Invoices() {
     return () => window.clearInterval(t);
   }, [address]);
 
-  const pendingList = invoices?.filter((i) => i.status === "unpaid") ?? [];
-  const pending = pendingList.length;
+  const pending = invoices?.filter((i) => i.status === "unpaid").length ?? 0;
   const paid = invoices?.filter((i) => i.status === "paid").length ?? 0;
-  const phase: DeskPhase = !address
-    ? "connect"
-    : !invoices || invoices.length === 0
-      ? "issue"
-      : pending > 0
-        ? "pay"
-        : "done";
-
-  function onLookup(e: React.FormEvent) {
-    e.preventDefault();
-    const id = Number(lookup.trim());
-    if (!Number.isInteger(id) || id < 1) return;
-    void navigate({ to: "/pay/$id", params: { id: String(id) } });
-  }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <PageHeader
-        kicker="App"
         title="Your listings"
         action={
           address ? (
@@ -87,137 +62,63 @@ function Invoices() {
           )
         }
       >
-        Listings you published. USDC is collected on Ethereum. Paidline confirms the payment.
+        What you published. Open ones sit on the marketplace until someone pays.
       </PageHeader>
-
-      <div className="mt-8">
-        <StatusStrip address={address} />
-      </div>
-      <div className="mt-4">
-        <SettlementPath phase={phase} pendingId={pendingList[0]?.id} />
-      </div>
 
       {error ? <p className="mt-6 text-sm text-bad">{error}</p> : null}
       {loadError ? <p className="mt-6 text-sm text-bad">{loadError}</p> : null}
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.85fr)]">
-        <section>
+      <section className="mt-8">
+        {address && invoices && invoices.length > 0 ? (
           <p className="mb-4 text-xs uppercase tracking-wide text-muted">
-            {address && invoices && invoices.length > 0
-              ? `${pending} open · ${paid} paid`
-              : "Listings"}
+            {pending} open · {paid} paid
           </p>
-          {!ready ? (
-            <p className="text-sm text-muted">Loading…</p>
-          ) : !address ? (
-            <DisconnectedDesk onConnect={() => void connect()} />
-          ) : invoices === null && !loadError ? (
-            <p className="text-sm text-muted">Loading listings…</p>
-          ) : invoices && invoices.length === 0 ? (
-            <EmptyDesk />
-          ) : invoices ? (
-            <ul className="grid gap-4 sm:grid-cols-2">
-              {invoices.map((inv) => (
-                <li key={inv.id}>
-                  <PaperSlip
-                    id={String(inv.id)}
-                    title={inv.title}
-                    amount={formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)}
-                    status={inv.status}
-                    to="/invoice/$id"
-                    meta={
-                      inv.status === "paid" && inv.paidTxHash
-                        ? shortAddr(inv.paidTxHash, 6)
-                        : inv.status === "unpaid" || inv.status === "expired"
-                          ? formatDue(inv.expiry)
-                          : inv.releaseLabel
-                    }
-                  />
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </section>
-
-        <aside className="grid gap-4 self-start">
-          <figure className="overflow-hidden rounded-xl">
-            <img src="/brand/hallmark.jpg" alt="" className="aspect-square w-full object-cover" />
-          </figure>
-          <form onSubmit={onLookup} className="rounded-xl border border-line bg-surface p-5">
-            <p className="text-xs uppercase tracking-wide text-muted">Pay by number</p>
-            <p className="mt-2 font-display text-2xl tracking-tight">Open a listing</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Have an ID? Jump straight to checkout.
-            </p>
-            <div className="mt-4 flex gap-2">
-              <Input
-                value={lookup}
-                onChange={(e) => setLookup(e.target.value)}
-                inputMode="numeric"
-                placeholder="4"
-                aria-label="Listing number"
-              />
-              <Button type="submit" variant="ghost">
-                Pay
-              </Button>
-            </div>
-          </form>
-          <div className="rounded-xl border border-line bg-surface p-5">
-            <p className="text-xs uppercase tracking-wide text-muted">Network</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Listings live on Creditcoin testnet. Payments are USDC on Ethereum Sepolia. The
-              contract, not this site, decides paid.
-            </p>
-            <Link to="/docs" className="mt-3 inline-block text-sm underline decoration-line underline-offset-4">
-              Documentation
-            </Link>
-            <p className="mt-3 break-all font-mono text-xs text-faint">
-              <a
-                href={`${CREDITCOIN_EXPLORER}/address/${PAIDLINE_ADDRESS}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {shortAddr(PAIDLINE_ADDRESS, 6)}
-              </a>
-            </p>
-          </div>
-        </aside>
-      </div>
+        ) : null}
+        {!ready ? (
+          <p className="text-sm text-muted">Loading…</p>
+        ) : !address ? (
+          <DisconnectedDesk onConnect={() => void connect()} />
+        ) : invoices === null && !loadError ? (
+          <p className="text-sm text-muted">Loading listings…</p>
+        ) : invoices && invoices.length === 0 ? (
+          <EmptyDesk />
+        ) : invoices ? (
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {invoices.map((inv) => (
+              <li key={inv.id}>
+                <PaperSlip
+                  id={String(inv.id)}
+                  title={inv.title}
+                  amount={formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)}
+                  status={inv.status}
+                  to="/invoice/$id"
+                  meta={
+                    inv.status === "paid" && inv.paidTxHash
+                      ? shortAddr(inv.paidTxHash, 6)
+                      : inv.status === "unpaid" || inv.status === "expired"
+                        ? formatDue(inv.expiry)
+                        : inv.releaseLabel
+                  }
+                />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
     </main>
   );
 }
 
 function DisconnectedDesk({ onConnect }: { onConnect: () => void }) {
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <PaperSlip
-          specimen
-          id="—"
-          title="September retainer"
-          amount="250.00"
-          status="paid"
-          meta="Paid · receipt on file"
-        />
-        <PaperSlip
-          specimen
-          id="—"
-          title="Workshop seat"
-          amount="80.00"
-          status="unpaid"
-          meta="Waiting on USDC"
-        />
-      </div>
-      <div className="rounded-xl border border-line bg-surface p-5 sm:p-6">
-        <p className="font-display text-2xl tracking-tight">Connect to see your listings</p>
-        <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
-          Samples above so this page isn’t empty. Your real listings are tied to the wallet that
-          published them.
-        </p>
-        <Button className="mt-5" onClick={onConnect}>
-          Connect wallet
-        </Button>
-      </div>
+    <div className="rounded-xl border border-line bg-surface p-5 sm:p-6">
+      <p className="font-display text-2xl tracking-tight">Connect to see your listings</p>
+      <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
+        Listings are tied to the wallet that published them.
+      </p>
+      <Button className="mt-5" onClick={onConnect}>
+        Connect wallet
+      </Button>
     </div>
   );
 }
@@ -227,10 +128,9 @@ function EmptyDesk() {
     <div className="relative overflow-hidden rounded-xl bg-paper p-6 text-ink shadow-sheet sm:p-8">
       <div aria-hidden className="pointer-events-none absolute inset-0 opacity-45 mix-blend-multiply paper-tooth" />
       <div className="relative">
-        <p className="text-xs uppercase tracking-wide text-ink-muted">Get started</p>
-        <h2 className="mt-2 font-display text-3xl tracking-tight text-ink">Create your first listing</h2>
+        <h2 className="font-display text-3xl tracking-tight text-ink">Nothing published yet</h2>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
-          Name the work, set a USDC price, lock a little Creditcoin. It goes live on the marketplace.
+          Name the work, set a price, lock a little credit. It goes live on the marketplace.
         </p>
         <Link to="/new" className="mt-6 inline-block">
           <Button variant="ink">New listing</Button>

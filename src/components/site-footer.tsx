@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { CREDITCOIN_EXPLORER, PAIDLINE_ADDRESS } from "@/lib/paidline/constants";
 import { Mark } from "@/components/mark";
 
 export function SiteFooter() {
@@ -20,21 +19,14 @@ export function SiteFooter() {
             <Link to="/board" className="hover:text-fg">
               Marketplace
             </Link>
-            <Link to="/invoices" className="hover:text-fg">
-              App
-            </Link>
             <Link to="/pay" className="hover:text-fg">
-              Open listings
-            </Link>
-            <Link to="/gate" className="hover:text-fg">
-              API
+              App
             </Link>
             <Link to="/docs" className="hover:text-fg">
               Docs
             </Link>
           </nav>
         </div>
-        <p className="break-all font-mono text-xs text-faint">{PAIDLINE_ADDRESS}</p>
       </div>
     </footer>
   );
