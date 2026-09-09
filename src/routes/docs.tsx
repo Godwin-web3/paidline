@@ -14,6 +14,7 @@ export const Route = createFileRoute("/docs")({ component: DocsPage });
 const TOC = [
   { href: "#what", label: "What it is" },
   { href: "#how", label: "How it works" },
+  { href: "#stack", label: "The stack" },
   { href: "#who", label: "Who uses it" },
   { href: "#ispai", label: "isPaid" },
   { href: "#x402", label: "x402" },
@@ -111,6 +112,26 @@ function DocsPage() {
               </li>
             ))}
           </ol>
+        </section>
+
+        <section id="stack" className="scroll-mt-24 border-t border-line pt-12 mt-12">
+          <h2 className="font-display text-3xl tracking-tight">The stack</h2>
+          <p className="mt-4 text-sm leading-relaxed text-muted">
+            Paidline does not invent a new proof system. It sits on three pieces that already exist.
+          </p>
+          <ul className="mt-6 grid gap-4">
+            {[
+              ["Ethereum", "The buyer sends USDC here. Sepolia in this demo. Paidline never receives that transfer."],
+              ["Attestcoin", "The Creditcoin native prover. It says whether an Ethereum transaction is in the chain, with a Merkle proof and continuity. A relayer submits that proof. The submitter does not get to assert the fact."],
+              ["Creditcoin", "The invoice, isPaid, and the optional locked balance live here. CC3 testnet in this demo. Other contracts call this chain, not Ethereum."],
+              ["Paidline", "The checker. Matches token, destination, exact amount, expiry, unused hash. Emits InvoicePaid. Releases locked Creditcoin to the paying wallet."],
+            ].map(([t, d]) => (
+              <li key={t} className="rounded-xl border border-line bg-surface p-5">
+                <h3 className="font-medium">{t}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{d}</p>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section id="who" className="scroll-mt-24 border-t border-line pt-12 mt-12">

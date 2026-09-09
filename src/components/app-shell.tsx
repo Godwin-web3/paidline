@@ -42,12 +42,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className={cn("min-h-dvh bg-bg text-fg", shell === "desk" && "md:flex")}>
       {shell === "landing" ? <div className="grain" /> : null}
       {shell === "desk" ? <DeskSidebar pathname={pathname} /> : null}
-      <div className="relative z-10 min-w-0 flex-1">
+      <div className={cn("relative z-10 min-w-0 flex-1", shell === "desk" && "pb-16 md:pb-0")}>
         {shell === "landing" ? <LandingBar /> : null}
         {shell === "docs" ? <DocsBar /> : null}
         {shell === "ticket" ? <TicketBar pathname={pathname} /> : null}
-        {shell === "desk" ? <DeskMobileBar pathname={pathname} /> : null}
+        {shell === "desk" ? <DeskMobileBar /> : null}
         {children}
+        {shell === "desk" ? <DeskTabBar pathname={pathname} /> : null}
       </div>
     </div>
   );
@@ -55,12 +56,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function LandingBar() {
   return (
-    <header className="relative z-10 border-b border-line bg-bg">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+    <header className="sticky top-0 z-30 border-b border-line bg-bg">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
         <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 shrink-0 items-center">
           <Wordmark compact />
         </Link>
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1">
           <Link
             to="/docs"
             className="inline-flex min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg"
@@ -81,8 +82,8 @@ function LandingBar() {
 
 function DocsBar() {
   return (
-    <header className="relative z-10 border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+    <header className="sticky top-0 z-30 border-b border-line bg-surface">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 shrink-0 items-center">
             <Wordmark compact />
@@ -91,7 +92,7 @@ function DocsBar() {
             Docs
           </span>
         </div>
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1">
           <Link
             to="/"
             className="inline-flex min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg"
@@ -113,8 +114,8 @@ function DocsBar() {
 function TicketBar({ pathname }: { pathname: string }) {
   const receipt = pathname.startsWith("/receipt/");
   return (
-    <header className="relative z-10 border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+    <header className="sticky top-0 z-30 border-b border-line bg-surface">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
         <div className="flex items-center gap-3">
           <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 items-center">
             <Mark className="size-7" />
@@ -135,27 +136,47 @@ function TicketBar({ pathname }: { pathname: string }) {
   );
 }
 
-function DeskMobileBar({ pathname }: { pathname: string }) {
+function DeskMobileBar() {
   return (
-    <header className="relative z-10 border-b border-line bg-surface md:hidden">
-      <div className="flex min-w-0 items-center gap-2 px-3 py-2">
-        <Link to="/" aria-label="Paidline home" className="shrink-0">
+    <header className="sticky top-0 z-30 border-b border-line bg-surface md:hidden">
+      <div className="flex items-center justify-between gap-2 px-3 py-2">
+        <Link to="/" aria-label="Paidline home" className="inline-flex items-center gap-2">
           <Mark className="size-7" />
+          <span className="text-[11px] uppercase tracking-wide text-faint">Desk</span>
         </Link>
-        <p className="shrink-0 text-[11px] uppercase tracking-wide text-faint">Desk</p>
-        <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
-          {DESK_NAV.map((item) => (
-            <NavLink key={item.to} to={item.to} active={isActive(item.to, pathname)}>
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
         <div className="flex shrink-0 items-center gap-1">
           <WalletButton compact />
           <ThemeToggle />
         </div>
       </div>
     </header>
+  );
+}
+
+function DeskTabBar({ pathname }: { pathname: string }) {
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface md:hidden">
+      <ul className="grid grid-cols-4">
+        {DESK_NAV.map((item) => {
+          const active = isActive(item.to, pathname);
+          const Icon = item.icon;
+          return (
+            <li key={item.to}>
+              <Link
+                to={item.to}
+                className={cn(
+                  "flex min-h-14 flex-col items-center justify-center gap-1 text-[11px]",
+                  active ? "text-fg" : "text-muted",
+                )}
+              >
+                <Icon className="size-4" strokeWidth={1.75} />
+                {item.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
 
@@ -214,27 +235,5 @@ function DeskSidebar({ pathname }: { pathname: string }) {
         </div>
       </div>
     </aside>
-  );
-}
-
-function NavLink({
-  to,
-  active,
-  children,
-}: {
-  to: "/invoices" | "/new" | "/pay" | "/gate";
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      to={to}
-      className={cn(
-        "inline-flex min-h-11 items-center rounded-md px-2.5 text-sm whitespace-nowrap transition-colors duration-150 sm:px-3",
-        active ? "bg-raised text-fg" : "text-muted hover:text-fg",
-      )}
-    >
-      {children}
-    </Link>
   );
 }
