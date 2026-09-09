@@ -77,6 +77,18 @@ function ReceiptPage() {
               </a>
             </SheetMeta>
           ) : null}
+          {invoice.stampTxHash ? (
+            <SheetMeta label="Creditcoin stamp">
+              <a
+                className="font-mono text-xs underline underline-offset-4"
+                href={`${CREDITCOIN_EXPLORER}/tx/${invoice.stampTxHash}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {shortAddr(invoice.stampTxHash, 8)}
+              </a>
+            </SheetMeta>
+          ) : null}
           <SheetMeta label="Merchant">
             <a
               className="break-all font-mono text-xs underline underline-offset-4"

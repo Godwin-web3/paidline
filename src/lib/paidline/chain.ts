@@ -41,6 +41,7 @@ function mapInvoice(id: number, row: Record<string, unknown> | unknown[]): Invoi
     status,
     funded: Boolean(pick(row, "funded", 9)),
     paidTxHash: paid === ZERO_HASH ? null : paid,
+    stampTxHash: null,
     title: String(pick(row, "title", 11) ?? ""),
     releaseLabel: String(pick(row, "releaseLabel", 12) ?? ""),
     createdAt: 0,
@@ -49,8 +50,17 @@ function mapInvoice(id: number, row: Record<string, unknown> | unknown[]): Invoi
 }
 
 export async function readInvoice(id: number): Promise<Invoice | null> {
-  const row = await contract().invoices(id);
-  return mapInvoice(id, row as unknown as Record<string, unknown>);
+  const c = contract();
+  const row = await c.invoices(id);
+  const inv = mapInvoice(id, row as unknown as Record<string, unknown>);
+  if (!inv || inv.status !== "paid") return inv;
+  try {
+    const logs = await c.queryFilter(c.filters.InvoicePaid(id));
+    const hash = logs[0] && "transactionHash" in logs[0] ? String(logs[0].transactionHash) : null;
+    return { ...inv, stampTxHash: hash };
+  } catch {
+    return inv;
+  }
 }
 
 export async function readSettled(limit = 12): Promise<Invoice[]> {

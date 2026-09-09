@@ -15,6 +15,7 @@ export type Invoice = {
   localReleaseTo: string;
   status: InvoiceStatus;
   paidTxHash: string | null;
+  stampTxHash?: string | null;
   createdAt: number;
   paidAt: number | null;
   funded: boolean;
