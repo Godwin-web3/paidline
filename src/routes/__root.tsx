@@ -18,7 +18,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "First payment claims it. Paidline is the open board and the checker that stamps it paid.",
+          "List work on a public marketplace. Anyone pays in USDC. Paidline confirms it on-chain.",
       },
     ],
     links: [

@@ -15,13 +15,13 @@ export function OpenBoard({ compact = false }: { compact?: boolean }) {
   }, []);
 
   if (invoices === null) {
-    return <p className="text-sm text-muted">Reading the board…</p>;
+    return <p className="text-sm text-muted">Loading listings…</p>;
   }
 
   if (invoices.length === 0) {
     return (
       <p className="text-sm leading-relaxed text-muted">
-        Nothing open. The next funded invoice will land here. First payment claims it.
+        Nothing for sale right now. The next listing will show up here. First payment claims it.
       </p>
     );
   }

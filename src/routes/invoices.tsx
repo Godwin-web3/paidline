@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
+import { PageHeader } from "@/components/page-header";
 import { PaperSlip } from "@/components/paper-slip";
 import { SettlementPath, type DeskPhase } from "@/components/settlement-path";
 import { StatusStrip } from "@/components/status-strip";
@@ -37,7 +38,9 @@ function Invoices() {
     setLoadError(null);
     void listInvoices({ data: { merchant: address } })
       .then(setInvoices)
-      .catch((e: unknown) => setLoadError(e instanceof Error ? e.message : "Could not read invoices."));
+      .catch((e: unknown) =>
+        setLoadError(e instanceof Error ? e.message : "Could not load listings."),
+      );
   }, [address]);
 
   useEffect(() => {
@@ -68,25 +71,24 @@ function Invoices() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-muted">Desk</p>
-          <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Settlement</h1>
-          <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted">
-            Issue on Creditcoin. Collect USDC on Ethereum. The contract stamps it.
-          </p>
-        </div>
-        {address ? (
-          <Link to="/new">
-            <Button>
-              <Plus className="size-4" strokeWidth={1.75} />
-              Issue invoice
-            </Button>
-          </Link>
-        ) : (
-          <Button onClick={() => void connect()}>Connect wallet</Button>
-        )}
-      </div>
+      <PageHeader
+        kicker="App"
+        title="Your listings"
+        action={
+          address ? (
+            <Link to="/new">
+              <Button>
+                <Plus className="size-4" strokeWidth={1.75} />
+                New listing
+              </Button>
+            </Link>
+          ) : (
+            <Button onClick={() => void connect()}>Connect wallet</Button>
+          )
+        }
+      >
+        Listings you published. USDC is collected on Ethereum. Paidline confirms the payment.
+      </PageHeader>
 
       <div className="mt-8">
         <StatusStrip address={address} />
@@ -102,15 +104,15 @@ function Invoices() {
         <section>
           <p className="mb-4 text-xs uppercase tracking-wide text-muted">
             {address && invoices && invoices.length > 0
-              ? `${pending} pending · ${paid} paid`
-              : "Blotter"}
+              ? `${pending} open · ${paid} paid`
+              : "Listings"}
           </p>
           {!ready ? (
-            <p className="text-sm text-muted">Reading the desk…</p>
+            <p className="text-sm text-muted">Loading…</p>
           ) : !address ? (
             <DisconnectedDesk onConnect={() => void connect()} />
           ) : invoices === null && !loadError ? (
-            <p className="text-sm text-muted">Reading invoices…</p>
+            <p className="text-sm text-muted">Loading listings…</p>
           ) : invoices && invoices.length === 0 ? (
             <EmptyDesk />
           ) : invoices ? (
@@ -139,25 +141,21 @@ function Invoices() {
 
         <aside className="grid gap-4 self-start">
           <figure className="overflow-hidden rounded-xl">
-            <img
-              src="/brand/hallmark.jpg"
-              alt="Steel hallmark stamp"
-              className="aspect-square w-full object-cover"
-            />
+            <img src="/brand/hallmark.jpg" alt="" className="aspect-square w-full object-cover" />
           </figure>
           <form onSubmit={onLookup} className="rounded-xl border border-line bg-surface p-5">
-            <p className="text-xs uppercase tracking-wide text-muted">Step 02</p>
-            <p className="mt-2 font-display text-2xl tracking-tight">Pay by number</p>
+            <p className="text-xs uppercase tracking-wide text-muted">Pay by number</p>
+            <p className="mt-2 font-display text-2xl tracking-tight">Open a listing</p>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              Buyer opens the sheet. Sends the exact USDC. This page watches.
+              Have an ID? Jump straight to checkout.
             </p>
             <div className="mt-4 flex gap-2">
               <Input
                 value={lookup}
                 onChange={(e) => setLookup(e.target.value)}
                 inputMode="numeric"
-                placeholder="4821"
-                aria-label="Invoice number"
+                placeholder="4"
+                aria-label="Listing number"
               />
               <Button type="submit" variant="ghost">
                 Pay
@@ -165,13 +163,13 @@ function Invoices() {
             </div>
           </form>
           <div className="rounded-xl border border-line bg-surface p-5">
-            <p className="text-xs uppercase tracking-wide text-muted">Before you begin</p>
+            <p className="text-xs uppercase tracking-wide text-muted">Network</p>
             <p className="mt-2 text-sm leading-relaxed text-muted">
-              Creditcoin CC3 testnet. USDC on Ethereum Sepolia. You stay in control of the wallet.
-              The contract, not this site, decides paid.
+              Listings live on Creditcoin testnet. Payments are USDC on Ethereum Sepolia. The
+              contract, not this site, decides paid.
             </p>
             <Link to="/docs" className="mt-3 inline-block text-sm underline decoration-line underline-offset-4">
-              Source and contract
+              Documentation
             </Link>
             <p className="mt-3 break-all font-mono text-xs text-faint">
               <a
@@ -199,22 +197,22 @@ function DisconnectedDesk({ onConnect }: { onConnect: () => void }) {
           title="September retainer"
           amount="250.00"
           status="paid"
-          meta="Checked. Ethereum hash on the row."
+          meta="Paid · receipt on file"
         />
         <PaperSlip
           specimen
           id="—"
-          title="Design pass"
+          title="Workshop seat"
           amount="80.00"
           status="unpaid"
-          meta="Waiting on the exact USDC transfer."
+          meta="Waiting on USDC"
         />
       </div>
       <div className="rounded-xl border border-line bg-surface p-5 sm:p-6">
-        <p className="font-display text-2xl tracking-tight">Connect the issuing wallet</p>
+        <p className="font-display text-2xl tracking-tight">Connect to see your listings</p>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
-          Specimens above so the desk is not empty. Your blotter is on Creditcoin, keyed to the
-          wallet that issued the invoices. Start at step 01.
+          Samples above so this page isn’t empty. Your real listings are tied to the wallet that
+          published them.
         </p>
         <Button className="mt-5" onClick={onConnect}>
           Connect wallet
@@ -228,16 +226,14 @@ function EmptyDesk() {
   return (
     <div className="relative overflow-hidden rounded-xl bg-paper p-6 text-ink shadow-sheet sm:p-8">
       <div aria-hidden className="pointer-events-none absolute inset-0 opacity-45 mix-blend-multiply paper-tooth" />
-      <div aria-hidden className="pointer-events-none absolute inset-0 sheet-rules opacity-70" />
       <div className="relative">
-        <p className="text-xs uppercase tracking-wide text-ink-muted">Step 01</p>
-        <h2 className="mt-2 font-display text-3xl tracking-tight text-ink">Issue the first invoice</h2>
+        <p className="text-xs uppercase tracking-wide text-ink-muted">Get started</p>
+        <h2 className="mt-2 font-display text-3xl tracking-tight text-ink">Create your first listing</h2>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
-          Name the work. Set the USDC. Lock Creditcoin. You get a number and a pay link. Then this
-          blotter has paper on it.
+          Name the work, set a USDC price, lock a little Creditcoin. It goes live on the marketplace.
         </p>
         <Link to="/new" className="mt-6 inline-block">
-          <Button variant="ink">Write the invoice</Button>
+          <Button variant="ink">New listing</Button>
         </Link>
       </div>
     </div>

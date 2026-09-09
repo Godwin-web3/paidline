@@ -15,14 +15,13 @@ export function SettledFeed() {
   }, []);
 
   if (invoices === null) {
-    return <p className="text-sm text-muted">Reading stamps…</p>;
+    return <p className="text-sm text-muted">Loading paid listings…</p>;
   }
 
   if (invoices.length === 0) {
     return (
       <p className="text-sm leading-relaxed text-muted">
-        No stamps yet. The first matching USDC transfer will appear here. No wallet needed to
-        watch.
+        No paid listings yet. The first confirmed payment will appear here.
       </p>
     );
   }

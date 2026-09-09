@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { FileText, Plus, Search, Shield } from "lucide-react";
+import { FileText, Plus, ShoppingBag, Code2 } from "lucide-react";
 import { useEffect } from "react";
 import { Mark, Wordmark } from "@/components/mark";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -8,14 +8,14 @@ import { useSession } from "@/lib/paidline/session";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
-const DESK_NAV = [
-  { to: "/invoices", label: "Blotter", icon: FileText },
-  { to: "/new", label: "Issue", icon: Plus },
-  { to: "/pay", label: "Pay", icon: Search },
-  { to: "/gate", label: "Gate", icon: Shield },
+const APP_NAV = [
+  { to: "/invoices", label: "Listings", icon: FileText },
+  { to: "/new", label: "New listing", icon: Plus },
+  { to: "/pay", label: "Marketplace", icon: ShoppingBag },
+  { to: "/gate", label: "API", icon: Code2 },
 ] as const;
 
-type Shell = "landing" | "docs" | "desk" | "ticket";
+type Shell = "landing" | "docs" | "app" | "ticket";
 
 function shellOf(pathname: string): Shell {
   if (pathname === "/" || pathname === "/board" || pathname === "/demo") return "landing";
@@ -24,7 +24,7 @@ function shellOf(pathname: string): Shell {
   }
   if (pathname.startsWith("/pay/") || pathname.startsWith("/receipt/")) return "ticket";
   if (pathname.startsWith("/api/")) return "landing";
-  return "desk";
+  return "app";
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -39,16 +39,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [hydrate, hydrateTheme]);
 
   return (
-    <div className={cn("min-h-dvh bg-bg text-fg", shell === "desk" && "md:flex")}>
+    <div className={cn("min-h-dvh bg-bg text-fg", shell === "app" && "md:flex")}>
       {shell === "landing" ? <div className="grain" /> : null}
-      {shell === "desk" ? <DeskSidebar pathname={pathname} /> : null}
-      <div className={cn("relative z-10 min-w-0 flex-1", shell === "desk" && "pb-16 md:pb-0")}>
+      {shell === "app" ? <AppSidebar pathname={pathname} /> : null}
+      <div className={cn("relative z-10 min-w-0 flex-1", shell === "app" && "pb-16 md:pb-0")}>
         {shell === "landing" ? <LandingBar /> : null}
         {shell === "docs" ? <DocsBar /> : null}
         {shell === "ticket" ? <TicketBar pathname={pathname} /> : null}
-        {shell === "desk" ? <DeskMobileBar /> : null}
+        {shell === "app" ? <AppMobileBar /> : null}
         {children}
-        {shell === "desk" ? <DeskTabBar pathname={pathname} /> : null}
+        {shell === "app" ? <AppTabBar pathname={pathname} /> : null}
       </div>
     </div>
   );
@@ -56,43 +56,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 function LandingBar() {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-bg">
+    <header className="sticky top-0 z-30 border-b border-line/80 bg-bg/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
         <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 shrink-0 items-center">
           <Wordmark compact />
         </Link>
-        <div className="flex shrink-0 items-center gap-1">
+        <nav className="flex shrink-0 items-center gap-1">
           <Link
             to="/board"
             className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline-flex"
           >
-            Board
+            Marketplace
           </Link>
           <a
-            href="/#problem"
-            className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg lg:inline-flex"
-          >
-            Problem
-          </a>
-          <a
-            href="/#flow"
+            href="/#how"
             className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline-flex"
           >
-            Flow
+            How it works
           </a>
           <Link
             to="/docs"
-            className="inline-flex min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg"
+            className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg md:inline-flex"
           >
             Docs
           </Link>
           <Link to="/invoices">
             <span className="inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg transition-opacity duration-150 hover:opacity-90">
-              Open desk
+              Open app
             </span>
           </Link>
           <ThemeToggle />
-        </div>
+        </nav>
       </div>
     </header>
   );
@@ -100,7 +94,7 @@ function LandingBar() {
 
 function DocsBar() {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-surface">
+    <header className="sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 shrink-0 items-center">
@@ -112,14 +106,14 @@ function DocsBar() {
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <Link
-            to="/"
-            className="inline-flex min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg"
+            to="/board"
+            className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-fg"
           >
-            Home
+            Marketplace
           </Link>
           <Link to="/invoices">
-            <span className="inline-flex min-h-11 items-center rounded-md border border-line px-3 text-sm text-fg hover:bg-raised">
-              Open desk
+            <span className="inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg">
+              Open app
             </span>
           </Link>
           <ThemeToggle />
@@ -132,20 +126,26 @@ function DocsBar() {
 function TicketBar({ pathname }: { pathname: string }) {
   const receipt = pathname.startsWith("/receipt/");
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-surface">
+    <header className="sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
         <div className="flex items-center gap-3">
           <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 items-center">
             <Mark className="size-7" />
           </Link>
-          <p className="text-xs uppercase tracking-wide text-muted">{receipt ? "Receipt" : "Pay"}</p>
+          <p className="text-sm text-muted">{receipt ? "Receipt" : "Checkout"}</p>
         </div>
         <div className="flex items-center gap-1">
+          <Link
+            to="/board"
+            className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-fg"
+          >
+            Marketplace
+          </Link>
           <Link
             to="/invoices"
             className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-fg"
           >
-            Desk
+            App
           </Link>
           <ThemeToggle />
         </div>
@@ -154,13 +154,13 @@ function TicketBar({ pathname }: { pathname: string }) {
   );
 }
 
-function DeskMobileBar() {
+function AppMobileBar() {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-surface md:hidden">
       <div className="flex items-center justify-between gap-2 px-3 py-2">
         <Link to="/" aria-label="Paidline home" className="inline-flex items-center gap-2">
           <Mark className="size-7" />
-          <span className="text-[11px] uppercase tracking-wide text-faint">Desk</span>
+          <span className="text-sm font-medium">App</span>
         </Link>
         <div className="flex shrink-0 items-center gap-1">
           <WalletButton compact />
@@ -171,11 +171,11 @@ function DeskMobileBar() {
   );
 }
 
-function DeskTabBar({ pathname }: { pathname: string }) {
+function AppTabBar({ pathname }: { pathname: string }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface md:hidden">
       <ul className="grid grid-cols-4">
-        {DESK_NAV.map((item) => {
+        {APP_NAV.map((item) => {
           const active = isActive(item.to, pathname);
           const Icon = item.icon;
           return (
@@ -198,30 +198,29 @@ function DeskTabBar({ pathname }: { pathname: string }) {
   );
 }
 
-function isActive(to: (typeof DESK_NAV)[number]["to"], pathname: string) {
+function isActive(to: (typeof APP_NAV)[number]["to"], pathname: string) {
   if (to === "/invoices") return pathname === "/invoices" || pathname.startsWith("/invoice/");
   if (to === "/pay") return pathname === "/pay" || pathname.startsWith("/pay/");
   if (to === "/gate") return pathname === "/gate" || pathname.startsWith("/gate/");
   return pathname === to;
 }
 
-function DeskSidebar({ pathname }: { pathname: string }) {
+function AppSidebar({ pathname }: { pathname: string }) {
   return (
     <aside className="sticky top-0 z-20 hidden h-dvh w-56 shrink-0 flex-col border-r border-line bg-surface md:flex">
       <div className="border-b border-line px-4 py-4">
         <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 items-center">
           <Wordmark compact />
         </Link>
-        <p className="mt-3 text-[11px] uppercase tracking-wide text-faint">Desk</p>
         <Link
           to="/"
-          className="mt-1 inline-flex min-h-10 items-center text-sm text-muted hover:text-fg"
+          className="mt-3 inline-flex min-h-10 items-center text-sm text-muted hover:text-fg"
         >
-          ← Site
+          ← Home
         </Link>
       </div>
       <nav className="flex flex-col gap-1 px-2 py-3">
-        {DESK_NAV.map((item) => {
+        {APP_NAV.map((item) => {
           const active = isActive(item.to, pathname);
           const Icon = item.icon;
           return (
@@ -244,11 +243,11 @@ function DeskSidebar({ pathname }: { pathname: string }) {
           to="/docs"
           className="mb-3 inline-flex min-h-10 items-center text-sm text-muted hover:text-fg"
         >
-          Docs
+          Documentation
         </Link>
         <WalletButton />
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-muted">Appearance</span>
+          <span className="text-xs text-muted">Theme</span>
           <ThemeToggle />
         </div>
       </div>

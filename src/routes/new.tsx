@@ -82,11 +82,11 @@ function NewInvoice() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <p className="text-xs uppercase tracking-wide text-muted">Issue</p>
-      <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Write the invoice</h1>
+      <p className="text-xs uppercase tracking-wide text-muted">New listing</p>
+      <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Create a listing</h1>
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-        Name the work, the USDC, and what you lock. This listing is public the moment it is funded.
-        First payment claims it.
+        Name what you’re selling, the USDC price, and the credit you lock. It goes public as soon as
+        you publish. First matching payment claims it.
         {address ? (
           <>
             {" "}
@@ -98,7 +98,7 @@ function NewInvoice() {
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-2">
         <InvoiceSheet className="p-6 sm:p-8">
           <form onSubmit={(e) => void onCreate(e)} className="grid gap-5">
-            <Field label="What you are selling" paper>
+            <Field label="Title" paper>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -110,7 +110,7 @@ function NewInvoice() {
             <Field
               paper
               label="Price in USDC"
-              hint="Buyer sends this exact amount on Ethereum. You cannot have two open invoices for the same amount to this wallet."
+              hint="The buyer must send this exact amount. You cannot have two open listings at the same price to this wallet."
             >
               <Input
                 value={price}
@@ -120,7 +120,7 @@ function NewInvoice() {
                 className="border-rule bg-paper text-ink placeholder:text-ink-muted"
               />
             </Field>
-            <Field label="What they receive" paper>
+            <Field label="What the buyer gets" paper>
               <Input
                 value={releaseLabel}
                 onChange={(e) => setReleaseLabel(e.target.value)}
@@ -131,8 +131,8 @@ function NewInvoice() {
             </Field>
             <Field
               paper
-              label="Creditcoin to lock"
-              hint="Released to the paying wallet when the USDC transfer is confirmed."
+              label="Credit to lock"
+              hint="Released to the buyer when payment is confirmed."
             >
               <Input
                 value={escrow}
@@ -162,15 +162,15 @@ function NewInvoice() {
             </Field>
             {error ? <p className="text-sm text-bad">{error}</p> : null}
             <Button type="submit" size="lg" variant="ink" disabled={busy}>
-              {busy ? "Waiting on wallet…" : "Create invoice"}
+              {busy ? "Confirm in wallet…" : "Publish listing"}
             </Button>
           </form>
         </InvoiceSheet>
 
         <div className="lg:sticky lg:top-8">
-          <p className="mb-3 text-xs uppercase tracking-wide text-muted">What the buyer opens</p>
+          <p className="mb-3 text-xs uppercase tracking-wide text-muted">Buyer preview</p>
           <InvoiceSheet className="p-6 sm:p-8">
-            <p className="text-xs uppercase tracking-wide text-ink-muted">Invoice</p>
+            <p className="text-xs uppercase tracking-wide text-ink-muted">Listing</p>
             <h2 className="mt-2 font-display text-4xl tracking-tight text-ink">
               {title.trim() || "Untitled work"}
             </h2>
@@ -197,7 +197,7 @@ function NewInvoice() {
       </div>
       <p className="mt-6 text-center text-xs text-faint">
         <Link to="/invoices" className="underline decoration-line underline-offset-4">
-          Back to the blotter
+          Back to listings
         </Link>
       </p>
     </main>

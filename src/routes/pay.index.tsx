@@ -24,10 +24,10 @@ function PayLookup() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <p className="text-xs uppercase tracking-wide text-muted">Pay</p>
-      <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">First payment claims it</h1>
+      <p className="text-xs uppercase tracking-wide text-muted">Marketplace</p>
+      <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Open listings</h1>
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-        Open listings. No buyer list. Send the exact USDC and the lock is yours.
+        Public board. First matching USDC payment claims the listing.
       </p>
 
       <div className="mt-8">
@@ -36,7 +36,7 @@ function PayLookup() {
 
       <InvoiceSheet className="mt-10 max-w-lg p-6 sm:p-8">
         <p className="text-xs uppercase tracking-wide text-ink-muted">Have a number?</p>
-        <h2 className="mt-2 font-display text-3xl tracking-tight">Open a listing</h2>
+        <h2 className="mt-2 font-display text-3xl tracking-tight">Pay by number</h2>
         <form onSubmit={onLookup} className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className="grid flex-1 gap-1.5">
             <span className="text-xs uppercase tracking-wide text-ink-muted">Invoice</span>

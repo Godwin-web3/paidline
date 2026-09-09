@@ -12,22 +12,22 @@ export function SiteFooter() {
             <div>
               <p className="font-display text-2xl tracking-tight">Paidline</p>
               <p className="mt-1 max-w-xs text-sm leading-relaxed text-muted">
-                First payment claims it. The contract is the only judge.
+                Public marketplace. First matching payment confirms the listing.
               </p>
             </div>
           </div>
           <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
             <Link to="/board" className="hover:text-fg">
-              Board
+              Marketplace
             </Link>
             <Link to="/invoices" className="hover:text-fg">
-              Desk
+              App
             </Link>
             <Link to="/pay" className="hover:text-fg">
-              Pay
+              Open listings
             </Link>
             <Link to="/gate" className="hover:text-fg">
-              Gate
+              API
             </Link>
             <Link to="/docs" className="hover:text-fg">
               Docs

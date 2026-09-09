@@ -53,7 +53,7 @@ function ReceiptPage() {
       <InvoiceSheet className="p-6 sm:p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-wide text-ink-muted">Invoice #{invoice.id}</p>
+            <p className="text-xs uppercase tracking-wide text-ink-muted">Listing #{invoice.id}</p>
             <h1 className="mt-2 font-display text-4xl tracking-tight text-ink">{invoice.title}</h1>
           </div>
           <ReceiptStamp />

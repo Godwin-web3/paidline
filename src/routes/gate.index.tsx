@@ -22,11 +22,11 @@ function GateLookup() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-10">
-      <p className="text-xs uppercase tracking-wide text-muted">x402 gate</p>
-      <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Pay, then the resource</h1>
+      <p className="text-xs uppercase tracking-wide text-muted">API</p>
+      <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Pay, then get the resource</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted">
-        An agent hits an endpoint. If the invoice is unpaid, the response is 402 with a pay link. After
-        the contract stamps it, the same request returns 200 and the work.
+        An agent or app calls this endpoint. If the listing is unpaid, the response is HTTP 402
+        with a checkout link. After payment is confirmed, the same call returns 200.
       </p>
       <form onSubmit={onSubmit} className="mt-8 grid gap-4 rounded-xl border border-line bg-surface p-5">
         <Field label="Invoice number">
@@ -43,7 +43,7 @@ function GateLookup() {
         </Field>
         {error ? <p className="text-sm text-bad">{error}</p> : null}
         <Button type="submit" size="lg">
-          Call the gate
+          Check listing
         </Button>
       </form>
       <p className="mt-4 font-mono text-xs text-faint">GET /api/gate/{"{id}"}</p>

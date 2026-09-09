@@ -120,10 +120,10 @@ function BuyerPay() {
   return (
     <main className="mx-auto max-w-md px-4 py-8 sm:py-10">
       <InvoiceSheet className="p-6 sm:p-8">
-        <p className="text-xs uppercase tracking-wide text-ink-muted">Pay invoice #{invoice.id}</p>
+        <p className="text-xs uppercase tracking-wide text-ink-muted">Listing #{invoice.id}</p>
         <h1 className="mt-3 font-display text-4xl tracking-tight text-ink">{invoice.title}</h1>
         <p className="mt-2 text-sm text-ink-muted">
-          Send {amount} USDC to this address on Ethereum. First matching transfer claims the lock.
+          Send {amount} USDC on Ethereum. First matching payment claims this listing.
         </p>
 
         <dl className="mt-8 grid gap-5">

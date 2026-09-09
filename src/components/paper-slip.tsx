@@ -26,7 +26,7 @@ export function PaperSlip({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-mono text-[11px] uppercase tracking-wide text-ink-muted">
-            {specimen ? "Specimen" : `Invoice #${id}`}
+            {specimen ? "Sample" : `Listing #${id}`}
           </p>
           <p className="mt-1 truncate font-display text-xl tracking-tight text-ink">{title}</p>
         </div>

@@ -36,12 +36,11 @@ function GatePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
-      <p className="text-xs uppercase tracking-wide text-muted">x402 gate</p>
+      <p className="text-xs uppercase tracking-wide text-muted">API</p>
       <h1 className="mt-1 font-display text-3xl tracking-tight">GET /api/gate/{id}</h1>
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-        This is the HTTP contract an agent retries. Unpaid is 402. Paid is 200. The body is JSON.
-        Paidline does not serve the work until <span className="font-mono text-fg">isPaid</span> is
-        true.
+        Unpaid listings return 402. Paid listings return 200. The body is JSON. Paidline does not
+        serve the work until the contract says it is paid.
       </p>
 
       <div className="mt-8 overflow-hidden rounded-xl border border-line bg-surface">
@@ -59,7 +58,7 @@ function GatePage() {
       {body && "x402" in body ? (
         <div className="mt-6 flex flex-wrap gap-3">
           <Link to="/pay/$id" params={{ id: String(invoiceId) }}>
-            <Button>Pay invoice #{invoiceId}</Button>
+            <Button>Pay listing #{invoiceId}</Button>
           </Link>
           {body.amount ? (
             <p className="self-center text-sm text-muted">

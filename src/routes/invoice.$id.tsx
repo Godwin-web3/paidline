@@ -52,7 +52,7 @@ function SellerInvoice() {
         <h1 className="font-display text-3xl">Invoice not found</h1>
         <p className="mt-2 text-sm text-muted">Nothing at this number.</p>
         <Link to="/invoices" className="mt-6 inline-block text-sm underline underline-offset-4">
-          Back to invoices
+          Back to listings
         </Link>
       </main>
     );
@@ -87,16 +87,16 @@ function SellerInvoice() {
     <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
       <p className="mb-4 text-xs uppercase tracking-wide text-muted">
         <Link to="/invoices" className="hover:text-fg">
-          Blotter
+          Listings
         </Link>
         <span className="mx-2 text-faint">/</span>
-        Invoice #{invoice.id}
+        Listing #{invoice.id}
       </p>
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start">
         <InvoiceSheet className="p-6 sm:p-8">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-wide text-ink-muted">Invoice #{invoice.id}</p>
+              <p className="text-xs uppercase tracking-wide text-ink-muted">Listing #{invoice.id}</p>
               <h1 className="mt-2 font-display text-4xl tracking-tight text-ink">{invoice.title}</h1>
             </div>
             <StatusPill status={invoice.status} />

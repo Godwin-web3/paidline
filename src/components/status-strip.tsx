@@ -8,8 +8,8 @@ import { shortAddr } from "@/lib/utils";
 export function StatusStrip({ address }: { address: string | null }) {
   const items = [
     { k: "Wallet", v: address ? shortAddr(address, 4) : "Not connected" },
-    { k: "Invoice chain", v: `${NETWORKS.creditcoin.name} ${NETWORKS.creditcoin.network}` },
-    { k: "Payment", v: `${NETWORKS.sepolia.tokenSymbol} on ${NETWORKS.sepolia.name}` },
+    { k: "Listings", v: `${NETWORKS.creditcoin.name} ${NETWORKS.creditcoin.network}` },
+    { k: "Payments", v: `${NETWORKS.sepolia.tokenSymbol} on ${NETWORKS.sepolia.name}` },
     { k: "Contract", v: shortAddr(PAIDLINE_ADDRESS, 4) },
   ];
 

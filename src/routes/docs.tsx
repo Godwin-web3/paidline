@@ -75,17 +75,18 @@ function DocsPage() {
       <article className="max-w-2xl pb-16">
         <h1 className="font-display text-4xl tracking-tight sm:text-5xl">Docs</h1>
         <p className="mt-4 text-base leading-relaxed text-muted">
-          Paidline is a checker. An invoice lives on Creditcoin. A USDC transfer happens on
-          Ethereum. The contract is the only thing that may say the invoice is paid.
+          Paidline is a public marketplace with a payment checker. You list work on Creditcoin.
+          Buyers pay USDC on Ethereum. The contract is the only thing that may say the listing is
+          paid.
         </p>
 
         <section id="what" className="scroll-mt-24 border-t border-line pt-12 mt-12">
           <h2 className="font-display text-3xl tracking-tight">What it is</h2>
           <p className="mt-4 text-sm leading-relaxed text-muted">
-            Not a bridge. Not a credit score. Not a company that reports a payment. The seller
-            writes terms. The buyer sends the exact USDC. A proof of that Ethereum transaction is
-            submitted on Creditcoin. If token, destination, and amount match an open invoice, the
-            invoice flips paid and locked Creditcoin releases to the paying wallet.
+            Not a bridge. Not a credit score. Not a company that reports a payment. You publish a
+            listing. Anyone may pay the exact USDC. A proof of that Ethereum transfer is submitted
+            on Creditcoin. If token, destination, and amount match, the listing is paid and locked
+            credit releases to the buyer.
           </p>
           <p className="mt-4 text-sm leading-relaxed text-muted">
             Two open invoices cannot share the same chain, token, destination, and amount. One
