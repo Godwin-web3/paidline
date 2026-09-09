@@ -18,7 +18,7 @@ const DESK_NAV = [
 type Shell = "landing" | "docs" | "desk" | "ticket";
 
 function shellOf(pathname: string): Shell {
-  if (pathname === "/") return "landing";
+  if (pathname === "/" || pathname === "/board" || pathname === "/demo") return "landing";
   if (pathname.startsWith("/docs") || pathname.startsWith("/how") || pathname.startsWith("/source")) {
     return "docs";
   }
@@ -62,9 +62,15 @@ function LandingBar() {
           <Wordmark compact />
         </Link>
         <div className="flex shrink-0 items-center gap-1">
+          <Link
+            to="/board"
+            className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline-flex"
+          >
+            Board
+          </Link>
           <a
             href="/#problem"
-            className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline-flex"
+            className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg lg:inline-flex"
           >
             Problem
           </a>

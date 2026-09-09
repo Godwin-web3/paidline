@@ -88,6 +88,22 @@ export async function readSettled(limit = 12): Promise<Invoice[]> {
   }
 }
 
+export async function readOpen(limit = 24): Promise<Invoice[]> {
+  try {
+    const c = contract();
+    const next = Number(await c.nextInvoiceId());
+    if (!Number.isFinite(next) || next < 2) return [];
+    const ids: number[] = [];
+    for (let i = next - 1; i >= 1 && ids.length < 64; i--) ids.push(i);
+    const rows = await Promise.all(ids.map((id) => readInvoice(id)));
+    return rows
+      .filter((inv): inv is Invoice => inv !== null && inv.status === "unpaid" && inv.funded)
+      .slice(0, limit);
+  } catch {
+    return [];
+  }
+}
+
 export async function readInvoices(merchant: string): Promise<Invoice[]> {
   const ids = (await contract().invoicesOf(merchant)) as bigint[];
   if (!ids.length) return [];

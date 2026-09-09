@@ -18,7 +18,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "The USDC moved. The invoice did not. Paidline is the checker that stamps it paid.",
+          "First payment claims it. Paidline is the open board and the checker that stamps it paid.",
       },
     ],
     links: [

@@ -85,8 +85,8 @@ function NewInvoice() {
       <p className="text-xs uppercase tracking-wide text-muted">Issue</p>
       <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Write the invoice</h1>
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-        Name the work, the USDC the buyer sends on Ethereum, and what you lock. The sheet on the
-        right is what they will see.
+        Name the work, the USDC, and what you lock. This listing is public the moment it is funded.
+        First payment claims it.
         {address ? (
           <>
             {" "}

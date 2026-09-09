@@ -12,11 +12,14 @@ export function SiteFooter() {
             <div>
               <p className="font-display text-2xl tracking-tight">Paidline</p>
               <p className="mt-1 max-w-xs text-sm leading-relaxed text-muted">
-                A payment is not a fact until the contract says so.
+                First payment claims it. The contract is the only judge.
               </p>
             </div>
           </div>
           <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
+            <Link to="/board" className="hover:text-fg">
+              Board
+            </Link>
             <Link to="/invoices" className="hover:text-fg">
               Desk
             </Link>

@@ -89,7 +89,8 @@ function DocsPage() {
           </p>
           <p className="mt-4 text-sm leading-relaxed text-muted">
             Two open invoices cannot share the same chain, token, destination, and amount. One
-            payment can only mean one invoice.
+            payment can only mean one invoice. There is no buyer list. Locked Creditcoin releases
+            to the wallet that sent the matching transfer. First payment claims it.
           </p>
         </section>
 
@@ -142,7 +143,7 @@ function DocsPage() {
               ["A buyer who will not open a new chain", "They get a number and an amount. They send USDC. They do not operate the proof."],
               ["An agent calling an API", "The endpoint returns 402 until the invoice is paid. After the stamp, the same request returns the resource. x402 with your checker, not someone else’s."],
               ["Another contract", "It calls isPaid or listens for InvoicePaid. It does not integrate Attestcoin. Paidline is the checker."],
-              ["A marketplace that will not hold funds", "USDC never sits in an admin wallet. The contract matches the transfer. Optional Creditcoin is the unlock, not a wrap."],
+              ["A marketplace that will not hold funds", "The board is the marketplace. Listings are public. First matching USDC claims the lock. No auction contract. No admin wallet."],
               ["A protocol gating work", "Mint, unlock, flip a role — after isPaid is true. The payment is the fact. Your contract is the consequence."],
             ].map(([t, d]) => (
               <li key={t} className="rounded-xl border border-line bg-surface p-5">

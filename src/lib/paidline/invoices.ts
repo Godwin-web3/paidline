@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { existsSync, readFileSync } from "node:fs";
 import { Contract, JsonRpcProvider, Wallet, zeroPadValue } from "ethers";
 import { PAIDLINE_ABI } from "./abi.ts";
-import { readInvoice, readInvoices, readSettled } from "./chain.ts";
+import { readInvoice, readInvoices, readOpen, readSettled } from "./chain.ts";
 import {
   CREDITCOIN_RPC,
   PAIDLINE_ADDRESS,
@@ -50,6 +50,15 @@ export const listInvoices = createServerFn({ method: "GET" })
 
 export const listSettled = createServerFn({ method: "GET" }).handler(async () => {
   const rows = await readSettled(12);
+  return rows.map((inv) => ({
+    ...inv,
+    sourceAmount: inv.sourceAmount.toString(),
+    localAmount: inv.localAmount.toString(),
+  }));
+});
+
+export const listOpen = createServerFn({ method: "GET" }).handler(async () => {
+  const rows = await readOpen(24);
   return rows.map((inv) => ({
     ...inv,
     sourceAmount: inv.sourceAmount.toString(),

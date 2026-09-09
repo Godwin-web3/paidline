@@ -123,7 +123,7 @@ function BuyerPay() {
         <p className="text-xs uppercase tracking-wide text-ink-muted">Pay invoice #{invoice.id}</p>
         <h1 className="mt-3 font-display text-4xl tracking-tight text-ink">{invoice.title}</h1>
         <p className="mt-2 text-sm text-ink-muted">
-          Send {amount} USDC to this address on Ethereum. Use the wallet you already have.
+          Send {amount} USDC to this address on Ethereum. First matching transfer claims the lock.
         </p>
 
         <dl className="mt-8 grid gap-5">
