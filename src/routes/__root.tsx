@@ -18,7 +18,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Issue an invoice on Creditcoin. The buyer pays USDC on Ethereum. The contract marks it paid when the transfer matches.",
+          "The USDC moved. The invoice did not. Paidline is the checker that stamps it paid.",
       },
     ],
     links: [

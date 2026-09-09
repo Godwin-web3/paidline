@@ -6,9 +6,9 @@ function DemoPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       <p className="text-xs uppercase tracking-wide text-muted">Demo</p>
-      <h1 className="mt-1 font-display text-3xl tracking-tight">Paidline, 61 seconds</h1>
+      <h1 className="mt-1 font-display text-3xl tracking-tight">Problem. Solution. Stamp.</h1>
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-        A transfer is not a paid invoice. Not until the contract says so.
+        A transfer is not a paid invoice. Not until the contract says so. One minute, live.
       </p>
       <video
         className="mt-8 w-full rounded-xl border border-line bg-black"

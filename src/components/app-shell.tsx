@@ -62,6 +62,18 @@ function LandingBar() {
           <Wordmark compact />
         </Link>
         <div className="flex shrink-0 items-center gap-1">
+          <a
+            href="/#problem"
+            className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline-flex"
+          >
+            Problem
+          </a>
+          <a
+            href="/#flow"
+            className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline-flex"
+          >
+            Flow
+          </a>
           <Link
             to="/docs"
             className="inline-flex min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg"

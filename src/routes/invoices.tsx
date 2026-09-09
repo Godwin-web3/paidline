@@ -73,8 +73,7 @@ function Invoices() {
           <p className="text-xs uppercase tracking-wide text-muted">Desk</p>
           <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Settlement</h1>
           <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted">
-            Issue on Creditcoin. Collect USDC on Ethereum. The contract is the only thing that may
-            mark an invoice paid. This is CC3 testnet. Demo funds have no market value.
+            Issue on Creditcoin. Collect USDC on Ethereum. The contract stamps it.
           </p>
         </div>
         {address ? (
