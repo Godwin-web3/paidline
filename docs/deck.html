@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Paidline — BUIDL CTC 2026 Fall</title>
+  <style>
+    @page { size: 13.333in 7.5in; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #14110e; color: #f3ebe0; font-family: "IBM Plex Sans", Georgia, serif; }
+    .slide {
+      width: 13.333in;
+      height: 7.5in;
+      padding: 0.7in 0.85in;
+      page-break-after: always;
+      break-after: page;
+      position: relative;
+      overflow: hidden;
+      background: #14110e;
+    }
+    .slide:last-child { page-break-after: auto; }
+    .kicker { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #b9a894; }
+    h1 { font-family: Georgia, "Times New Roman", serif; font-size: 56px; font-weight: 500; letter-spacing: -0.03em; line-height: 1.05; margin-top: 18px; }
+    h1 em { font-style: italic; }
+    h2 { font-family: Georgia, serif; font-size: 36px; font-weight: 500; letter-spacing: -0.02em; margin-top: 12px; }
+    p, li { font-size: 20px; line-height: 1.45; color: #d8cbbd; }
+    .lead { max-width: 9.2in; margin-top: 22px; }
+    .grid { display: grid; gap: 22px; margin-top: 36px; }
+    .g2 { grid-template-columns: 1fr 1fr; }
+    .g3 { grid-template-columns: 1fr 1fr 1fr; }
+    .g4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .card { border: 1px solid #3a322c; padding: 22px 24px; border-radius: 6px; }
+    .card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #f3ebe0; }
+    .card p, .card li { font-size: 16px; }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 14px; color: #c4b5a2; word-break: break-all; }
+    .foot { position: absolute; left: 0.85in; right: 0.85in; bottom: 0.42in; display: flex; justify-content: space-between; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #8a7a68; }
+    ol.steps { margin-top: 28px; }
+    ol.steps li { margin: 0 0 16px 1.4em; }
+    table { width: 100%; border-collapse: collapse; margin-top: 28px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #3a322c; font-size: 16px; vertical-align: top; }
+    th { color: #8a7a68; font-weight: 500; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .big { font-family: Georgia, serif; font-size: 42px; line-height: 1.15; max-width: 11in; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <section class="slide">
+    <p class="kicker">BUIDL CTC 2026 Fall · RWA + AI</p>
+    <h1>Paidline.<br /><em>The contract is what says it’s paid.</em></h1>
+    <p class="lead">List work on Creditcoin. Anyone pays USDC on Ethereum. Attestcoin proves the transfer. Other apps ask <span class="mono">isPaid</span>. Agents hit HTTP 402. No custodian.</p>
+    <p class="lead mono" style="margin-top:36px">paidline.vercel.app · github.com/Godwin-web3/paidline</p>
+    <div class="foot"><span>Paidline</span><span>1 / 8</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">The gap</p>
+    <h2>Creditcoin already proves a foreign payment. Apps still rebuild that path for one product.</h2>
+    <div class="grid g3">
+      <div class="card">
+        <h3>Loans and scores</h3>
+        <p>Useful. Not what a seller needs when they just want the invoice marked paid.</p>
+      </div>
+      <div class="card">
+        <h3>Custodial checkout</h3>
+        <p>USDC sitting in someone else’s contract. Chargebacks of trust, not of math.</p>
+      </div>
+      <div class="card">
+        <h3>Human dashboards</h3>
+        <p>Agents cannot click “Pay”. They need 402, a pay URL, and 200 on retry.</p>
+      </div>
+    </div>
+    <div class="foot"><span>Paidline</span><span>2 / 8</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Product</p>
+    <h2>A public board. First matching USDC claims it.</h2>
+    <ol class="steps">
+      <li><strong style="color:#f3ebe0">List.</strong> Title, exact USDC, a small Creditcoin lock, a due date.</li>
+      <li><strong style="color:#f3ebe0">Pay.</strong> Buyer sends USDC on Ethereum to the seller. Paidline never holds it.</li>
+      <li><strong style="color:#f3ebe0">Prove.</strong> Anyone submits the Attestcoin proof. Precompile 0x0FD2 decides inclusion.</li>
+      <li><strong style="color:#f3ebe0">Stamp.</strong> Match token, destination, exact amount. Emit InvoicePaid. Release the lock to the payer. isPaid becomes true.</li>
+    </ol>
+    <p class="lead" style="font-size:16px">The Creditcoin lock is a receipt bond, not the goods. The work is gated by <span class="mono">isPaid</span> or <span class="mono">GET /api/gate/:id</span>.</p>
+    <div class="foot"><span>Paidline</span><span>3 / 8</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Attestcoin — core feature, not a sticker</p>
+    <h2>Remote proof. Local action.</h2>
+    <table>
+      <tr><th>Step</th><th>Who</th><th>What</th></tr>
+      <tr><td class="mono">execute()</td><td>ASCBase</td><td>Merkle + continuity at 0x0FD2. queryId = chain, block, tx index.</td></tr>
+      <tr><td class="mono">processedQueries</td><td>ASCBase</td><td>Same leaf cannot settle twice.</td></tr>
+      <tr><td class="mono">_submitPayment</td><td>Paidline</td><td>Receipt status 1. Scan Transfer logs. Exact token / to / amount.</td></tr>
+      <tr><td class="mono">usedTxHashes</td><td>Paidline</td><td>Query id + proved body + claimed hash. A fake hash cannot relabel a payment.</td></tr>
+    </table>
+    <p class="lead" style="font-size:16px;margin-top:20px">The relayer fetches a proof and submits. It has no opinion. See docs/ATTESTCOIN.md.</p>
+    <div class="foot"><span>Paidline</span><span>4 / 8</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Surfaces</p>
+    <h2>One checker. Four callers.</h2>
+    <div class="grid g2">
+      <div class="card"><h3>Sellers</h3><p>Put a retainer, a seat, or an API credit on the board. Do not pick the buyer.</p></div>
+      <div class="card"><h3>Buyers</h3><p>Send USDC the way they already send it. No new chain to operate.</p></div>
+      <div class="card"><h3>Agents</h3><p><span class="mono">GET /api/gate/:id</span> → 402 + pay URL. After the stamp, the same call returns 200.</p></div>
+      <div class="card"><h3>Other contracts</h3><p><span class="mono">isPaid(id)</span> or <span class="mono">InvoicePaid</span>. They never integrate Attestcoin.</p></div>
+    </div>
+    <div class="foot"><span>Paidline</span><span>5 / 8</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Position</p>
+    <p class="big">We did not build another credit score. We built the primitive those apps should have called.</p>
+    <div class="grid g2" style="margin-top:40px">
+      <div class="card"><h3>Not invoice financing</h3><p>No investor, no LTV, no score curve. A listing is paid or it is not.</p></div>
+      <div class="card"><h3>Not a bridge</h3><p>USDC never moves to Creditcoin. Only the fact of payment does.</p></div>
+    </div>
+    <div class="foot"><span>Paidline</span><span>6 / 8</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Live on CC3 testnet</p>
+    <h2>Working code. Working proof path. Working app.</h2>
+    <table>
+      <tr><th>Thing</th><th>Where</th></tr>
+      <tr><td>App</td><td class="mono">paidline.vercel.app</td></tr>
+      <tr><td>Contract</td><td class="mono">0x6e88109Cf1f9679FAB8Faf2eD9C8bbCD8566a2c7</td></tr>
+      <tr><td>USDC</td><td class="mono">0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 · Sepolia</td></tr>
+      <tr><td>Demo</td><td class="mono">paidline.vercel.app/demo · 95s</td></tr>
+      <tr><td>Tests</td><td class="mono">npm test · forge test — match, replay, revert, refund</td></tr>
+    </table>
+    <div class="foot"><span>Paidline</span><span>7 / 8</span></div>
+  </section>
+
+  <section class="slide">
+    <p class="kicker">Ask</p>
+    <h1>A checker the rest of the ecosystem can call.</h1>
+    <p class="lead">Top-three CEIP fast-track so we can verify on mainnet, list real retainers, and keep the 402 gate in front of work that is actually for sale.</p>
+    <p class="lead mono">github.com/Godwin-web3/paidline</p>
+    <div class="foot"><span>Paidline</span><span>8 / 8</span></div>
+  </section>
+</body>
+</html>

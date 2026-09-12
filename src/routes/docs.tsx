@@ -14,6 +14,7 @@ export const Route = createFileRoute("/docs")({ component: DocsPage });
 const TOC = [
   { href: "#what", label: "What it is" },
   { href: "#how", label: "How it works" },
+  { href: "#attestcoin", label: "Attestcoin" },
   { href: "#stack", label: "The stack" },
   { href: "#who", label: "Who uses it" },
   { href: "#ispai", label: "isPaid" },
@@ -114,6 +115,21 @@ function DocsPage() {
               </li>
             ))}
           </ol>
+        </section>
+
+        <section id="attestcoin" className="scroll-mt-24 border-t border-line pt-12 mt-12">
+          <h2 className="font-display text-3xl tracking-tight">Attestcoin</h2>
+          <p className="mt-4 text-sm leading-relaxed text-muted">
+            Settlement is impossible without a verified proof. Paidline inherits ASCBase. execute()
+            checks Merkle inclusion and continuity at precompile 0x0FD2. queryId is the leaf:
+            chain, block, tx index — not a string the submitter typed. Receipt status must be 1.
+            Transfer logs are scanned for the exact token, destination, and amount. Replay is keyed
+            on that query id and the proved body, so a fake hash cannot relabel a payment.
+          </p>
+          <p className="mt-4 text-sm leading-relaxed text-muted">
+            The relayer fetches a proof and submits. It has no opinion. Other contracts never talk
+            to Attestcoin. They call isPaid.
+          </p>
         </section>
 
         <section id="stack" className="scroll-mt-24 border-t border-line pt-12 mt-12">

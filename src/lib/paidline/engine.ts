@@ -79,30 +79,32 @@ export function matchInvoice(
     return { ok: false, reason: "no_transfer", detail: "No Transfer log in the verified receipt." };
   }
 
-  const sameToken = receipt.logs.find((log) => norm(log.token) === norm(invoice.sourceToken));
-  if (!sameToken) {
+  const tokenLogs = receipt.logs.filter((log) => norm(log.token) === norm(invoice.sourceToken));
+  if (!tokenLogs.length) {
     return {
       ok: false, reason: "token_mismatch",
       detail: `Expected token ${invoice.sourceToken}.`,
     };
   }
-  if (norm(sameToken.to) !== norm(invoice.sourceRecipient)) {
+  const destLogs = tokenLogs.filter((log) => norm(log.to) === norm(invoice.sourceRecipient));
+  if (!destLogs.length) {
     return {
       ok: false, reason: "recipient_mismatch",
       detail: `Expected recipient ${invoice.sourceRecipient}.`,
     };
   }
-  if (sameToken.amount !== invoice.sourceAmount) {
+  const exact = destLogs.find((log) => log.amount === invoice.sourceAmount);
+  if (!exact) {
     return {
       ok: false, reason: "amount_mismatch",
-      detail: `Expected exactly ${invoice.sourceAmount.toString()} units. Got ${sameToken.amount.toString()}.`,
+      detail: `Expected exactly ${invoice.sourceAmount.toString()} units.`,
     };
   }
 
   return {
     ok: true,
     invoice,
-    transfer: sameToken,
+    transfer: exact,
     localReleasedTo: invoice.localReleaseTo || ZERO,
     localAmount: invoice.localAmount,
   };

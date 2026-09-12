@@ -5,5 +5,6 @@
   "deployer": "0xd9EA8ff9654cF57820977663767707ce0db0B6C4",
   "deployTx": "0x04a9f2ad3b9150393860aaf6f57fa9736cd3ec5d71bbcc047b896319b79848ac",
   "sourceChainKey": 1,
-  "explorer": "https://creditcoin-testnet.blockscout.com"
+  "explorer": "https://creditcoin-testnet.blockscout.com",
+  "note": "Live demo address. This commit patches query-id replay and Transfer-log scanning — redeploy and replace this file."
 }

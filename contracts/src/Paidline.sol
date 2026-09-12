@@ -16,8 +16,11 @@ import {INativeQueryVerifier} from "@gluwa/asc-contracts/contracts/write-ability
 ///      Multi-merchant: each invoice is owned by msg.sender. Escrow, cancel,
 ///      and fund are merchant-gated. Open invoices cannot share the same
 ///      (chain, token, recipient, amount) so a Transfer can mean only one
-///      unpaid invoice. Pending invoice id lives in transient storage so
-///      submitters cannot clobber each other across transactions.
+///      unpaid invoice. Replay is keyed on the Attestcoin query id, the proved
+///      tx body, and the claimed source hash. Transfer logs are scanned so a
+///      non-matching USDC log does not abort a later matching one. Pending
+///      invoice id lives in transient storage so submitters cannot clobber
+///      each other across transactions.
 contract Paidline is ASCBase {
     enum Actions {
         SubmitPayment
@@ -184,6 +187,9 @@ contract Paidline is ASCBase {
     }
 
     /// @dev Called by ASCBase.execute after the precompile accepts the proof.
+    ///      `queryId` is keccak256(chainKey, blockHeight, txIndex) from the Merkle path.
+    ///      ASCBase already sets processedQueries[queryId]; we also key usedTxHashes on it
+    ///      so a claimed sourceTxHash cannot stand in for the proven leaf.
     function _processAndEmitEvent(uint8 action, bytes32 queryId, bytes memory encodedTransaction)
         internal
         override
@@ -239,11 +245,15 @@ contract Paidline is ASCBase {
             EvmV1Decoder.getLogsByEventSignature(rec, TRANSFER_EVENT_SIGNATURE);
         if (logs.length == 0) revert NoTransfer();
 
-        (address token, address from, address to, uint256 amount) = _firstMatchingTransfer(logs, inv);
+        (, address from,,) = _firstMatchingTransfer(logs, inv);
 
         bytes32 sourceTx = pendingSourceTx;
-        if (sourceTx == bytes32(0)) revert ZeroValue();
-        if (usedTxHashes[sourceTx]) revert Replay();
+        if (sourceTx == bytes32(0) || queryId == bytes32(0)) revert ZeroValue();
+
+        bytes32 bodyId = keccak256(encodedTransaction);
+        if (usedTxHashes[queryId] || usedTxHashes[bodyId] || usedTxHashes[sourceTx]) revert Replay();
+        usedTxHashes[queryId] = true;
+        usedTxHashes[bodyId] = true;
         usedTxHashes[sourceTx] = true;
 
         delete openTerms[_termsKey(inv.chainKey, inv.sourceToken, inv.sourceRecipient, inv.sourceAmount)];
@@ -259,11 +269,6 @@ contract Paidline is ASCBase {
 
         (bool ok,) = from.call{value: releaseAmount}("");
         require(ok, "release failed");
-
-        queryId;
-        token;
-        to;
-        amount;
     }
 
     function _firstMatchingTransfer(EvmV1Decoder.LogEntry[] memory logs, Invoice storage inv)
@@ -271,22 +276,27 @@ contract Paidline is ASCBase {
         view
         returns (address token, address from, address to, uint256 amount)
     {
+        bool sawToken;
+        bool sawRecipient;
         for (uint256 i = 0; i < logs.length; i++) {
             EvmV1Decoder.LogEntry memory log = logs[i];
             if (log.topics.length < 3) continue;
             if (log.topics[0] != TRANSFER_EVENT_SIGNATURE) continue;
+            if (log.data.length != 32) continue;
             token = log.address_;
             from = address(uint160(uint256(log.topics[1])));
             to = address(uint160(uint256(log.topics[2])));
-            if (log.data.length != 32) continue;
             amount = abi.decode(log.data, (uint256));
             if (token != inv.sourceToken) continue;
-            if (to != inv.sourceRecipient) revert RecipientMismatch();
-            if (amount != inv.sourceAmount) revert AmountMismatch();
+            sawToken = true;
+            if (to != inv.sourceRecipient) continue;
+            sawRecipient = true;
+            if (amount != inv.sourceAmount) continue;
             return (token, from, to, amount);
         }
-        if (logs.length > 0 && logs[0].address_ != inv.sourceToken) revert TokenMismatch();
-        revert NoTransfer();
+        if (!sawToken) revert TokenMismatch();
+        if (!sawRecipient) revert RecipientMismatch();
+        revert AmountMismatch();
     }
 
     function _termsKey(uint256 chainKey, address token, address recipient, uint256 amount)

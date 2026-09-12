@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { USDC_SEPOLIA, SEPOLIA_CHAIN_KEY } from "./constants.ts";
-import { matchInvoice, receiptFromTransfer } from "./engine.ts";
+import { buildTransferLog, matchInvoice, receiptFromTransfer } from "./engine.ts";
 import type { Invoice } from "./types.ts";
 
 const MERCHANT = "0x7cB57B5A97eAbe94205C07890BE4c1aD31E486A8";
@@ -108,4 +108,16 @@ test("a transfer to another merchant cannot close this invoice", () => {
   const r = matchInvoice(invoice(), receipt({ to: BUYER }), new Set(), true);
   assert.equal(r.ok, false);
   if (!r.ok) assert.equal(r.reason, "recipient_mismatch");
+});
+
+test("a later matching Transfer still pays when an earlier same-token log is to someone else", () => {
+  const inv = invoice();
+  const rec = receipt();
+  rec.logs = [
+    buildTransferLog(USDC_SEPOLIA, BUYER, OTHER, 25_000_000n),
+    buildTransferLog(USDC_SEPOLIA, BUYER, MERCHANT, 25_000_000n),
+  ];
+  const r = matchInvoice(inv, rec, new Set(), true);
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.transfer.to.toLowerCase(), MERCHANT.toLowerCase());
 });
