@@ -10,7 +10,9 @@ Copy into the BUIDL CTC 2026 Fall form. Deadline: 14 Sep 2026 03:59 UTC.
 
 **Demo video:** https://paidline.vercel.app/demo (file: https://paidline.vercel.app/demo.mp4)
 
-**Deck PDF:** https://github.com/Godwin-web3/paidline/raw/main/docs/paidline-buidl-ctc-2026-fall.pdf
+**Deck PDF:** https://paidline.vercel.app/paidline-buidl-ctc-2026-fall.pdf
+
+(also: https://github.com/Godwin-web3/paidline/raw/main/docs/paidline-buidl-ctc-2026-fall.pdf after you push)
 
 **Live app:** https://paidline.vercel.app
 
