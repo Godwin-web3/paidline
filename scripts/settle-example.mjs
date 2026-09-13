@@ -48,13 +48,13 @@ function log(step, extra = {}) {
 async function waitProof(txHash) {
   const url = `${PROVER}/api/v1/proof-by-tx/${CHAIN_KEY}/${txHash}`;
   let last = "no proof yet";
-  for (let i = 0; i < 36; i++) {
+  for (let i = 0; i < 90; i++) {
     const res = await fetch(url);
     const text = await res.text();
     if (res.ok) return JSON.parse(text);
     last = `${res.status}: ${text.slice(0, 180)}`;
     log("proof.wait", { attempt: i + 1, last });
-    await new Promise((r) => setTimeout(r, 5000));
+    await new Promise((r) => setTimeout(r, 8000));
   }
   throw new Error(`Proof not ready: ${last}`);
 }

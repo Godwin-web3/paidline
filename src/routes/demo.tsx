@@ -8,11 +8,12 @@ export const Route = createFileRoute("/demo")({
 function DemoPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
-      <p className="kicker">Walkthrough</p>
+      <p className="kicker">Walkthrough · 3 min 40 sec</p>
       <h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">How Paidline works</h1>
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-        List. Pay. Confirm. A short walkthrough of the live product on Creditcoin CC3 and Ethereum
-        Sepolia.
+        The problem, what Paidline is, then a live pass through the board, a new listing, unpaid
+        checkout, paid listing 9, the receipt, and the x402 gate — 402 until paid, 200 with the work
+        after.
       </p>
       <video
         className="mt-8 w-full rounded-xl border border-line bg-black shadow-sheet"

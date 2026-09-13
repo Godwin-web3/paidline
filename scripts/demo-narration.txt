@@ -1,0 +1,21 @@
+The problem on most on-chain sales is not the transfer. It is the answer. A seller lists work. A buyer pays. Then someone — a company, a Discord admin, a screenshot — has to say the money landed. Other contracts cannot ask that company. Agents cannot either. They either get the payload for free, or they poll a private API that can lie.
+
+Paidline is a public marketplace with a payment checker. You list work on Creditcoin. Anyone can buy it. Buyers send exact USDC on Ethereum. Paidline never holds the dollars. Attestcoin proves that transfer. A Creditcoin contract is the only thing that may say it is paid. First matching payment claims the listing and unlocks the work.
+
+This is the live board. Looking is free. You only connect a wallet to list or to pay. Listing nine is already paid — a real ten USDC transfer on Sepolia, stamped on Creditcoin. The cards on the right are still open. Anyone can buy them.
+
+Four steps. List on Creditcoin. Pay on Ethereum. Prove with Attestcoin. Confirm with isPaid. Paidline is a checker, not a custodian. USDC never moves to Creditcoin. Only the fact of payment does.
+
+The marketplace is every funded unpaid listing. Eight are open right now. Each has a USDC price, a small Creditcoin receipt bond, and work sealed at list time. Two listings cannot share the same chain, token, destination, and amount. So one payment can only mean one invoice.
+
+To publish, you name the work, set a USDC price, attach the brief, and lock a little tCTC as a receipt bond. The brief never goes on-chain. Buyers see it only after the contract says paid. Checkout asks for a few micro-USDC above the sticker, so two retainers at the same price can sit on the same wallet without colliding.
+
+Here is unpaid checkout. Listing one. Two hundred fifty USDC due. Send exactly that amount to this address on Ethereum Sepolia. Until isPaid is true, the work stays locked. You see the price and the destination. You do not see the brief.
+
+Now listing nine, after a real payment. Ten point zero zero zero two four seven USDC — a unique amount, so it could not collide with another listing. A buyer sent that USDC on Sepolia. Attestcoin proved the transfer. submitPayment matched the token, the destination, and the amount. Checkout now shows Get the work: the brief that was sealed when this listing went up.
+
+The receipt is the paper trail. PAID is not a badge we drew. isPaid nine is true. Ethereum transfer on Sepolia. Creditcoin stamp on CC3. The locked tCTC released to the paying wallet.
+
+Agents do not need this UI. They hit one URL. GET api slash gate slash nine returns two hundred with the work. Same path, listing one, still unpaid: four oh two Payment Required, with the amount and the checkout URL. Retry the same request after paying. That is x four oh two.
+
+Other contracts never talk to the prover. They call isPaid. If it is true, they release. Remote proof. Local unlock. That is Paidline.

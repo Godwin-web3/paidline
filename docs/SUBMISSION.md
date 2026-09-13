@@ -16,7 +16,11 @@ Copy into the BUIDL CTC 2026 Fall form. Deadline: 14 Sep 2026 03:59 UTC.
 
 **Live app:** https://paidline.vercel.app
 
-**Judge walkthrough (10 USDC):** https://paidline.vercel.app/pay/9 · Gate: https://paidline.vercel.app/api/gate/9 (402 until paid, 200 with the work after)
+**Paid example (work unlocked):** https://paidline.vercel.app/pay/9 · Gate (200 + work): https://paidline.vercel.app/api/gate/9
+
+Sepolia pay tx: https://sepolia.etherscan.io/tx/0x1707c82ac8f8596cb6397df324f07e58c4cf56fb24afb24d543631c3e473036e
+
+Creditcoin stamp: https://creditcoin-testnet.blockscout.com/tx/0x5d817e34b541c70b2e126099809f1a2beaa5672e482600629d4f59c73d40c7c2
 
 **Contract (CC3 testnet, verified):** https://creditcoin-testnet.blockscout.com/address/0x4fB6aB16B3CEf1853DF4247b245E4de139108339
 
