@@ -1,16 +1,21 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { FileText, Plus, ShoppingBag, Code2 } from "lucide-react";
+import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { Mark, Wordmark } from "@/components/mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { WalletButton } from "@/components/wallet-button";
+import {
+  CREDITCOIN_EXPLORER,
+  PAIDLINE_ADDRESS,
+} from "@/lib/paidline/constants";
 import { useSession } from "@/lib/paidline/session";
 import { useTheme } from "@/lib/theme";
-import { cn } from "@/lib/utils";
+import { cn, shortAddr } from "@/lib/utils";
 
 const APP_NAV = [
   { to: "/pay", label: "Marketplace", icon: ShoppingBag },
-  { to: "/invoices", label: "Listings", icon: FileText },
+  { to: "/invoices", label: "Your listings", icon: FileText },
   { to: "/new", label: "New listing", icon: Plus },
   { to: "/gate", label: "API", icon: Code2 },
 ] as const;
@@ -27,7 +32,7 @@ function shellOf(pathname: string): Shell {
   return "app";
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const hydrate = useSession((s) => s.hydrate);
   const hydrateTheme = useTheme((s) => s.hydrate);
@@ -82,7 +87,7 @@ function LandingBar() {
           </Link>
           <Link to="/pay">
             <span className="inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg transition-opacity duration-150 hover:opacity-90">
-              Open app
+              Open marketplace
             </span>
           </Link>
           <ThemeToggle />
@@ -113,7 +118,7 @@ function DocsBar() {
           </Link>
           <Link to="/pay">
             <span className="inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg">
-              Open app
+              Open marketplace
             </span>
           </Link>
           <ThemeToggle />
@@ -145,7 +150,7 @@ function TicketBar({ pathname }: { pathname: string }) {
             to="/pay"
             className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-fg"
           >
-            App
+            All listings
           </Link>
           <ThemeToggle />
         </div>
@@ -159,8 +164,7 @@ function AppMobileBar() {
     <header className="sticky top-0 z-30 border-b border-line bg-surface md:hidden">
       <div className="flex items-center justify-between gap-2 px-3 py-2">
         <Link to="/" aria-label="Paidline home" className="inline-flex items-center gap-2">
-          <Mark className="size-7" />
-          <span className="text-sm font-medium">App</span>
+          <Wordmark compact />
         </Link>
         <div className="flex shrink-0 items-center gap-1">
           <WalletButton compact />
@@ -188,7 +192,7 @@ function AppTabBar({ pathname }: { pathname: string }) {
                 )}
               >
                 <Icon className="size-4" strokeWidth={1.75} />
-                {item.label}
+                {item.label === "Your listings" ? "Listings" : item.label}
               </Link>
             </li>
           );
@@ -207,16 +211,10 @@ function isActive(to: (typeof APP_NAV)[number]["to"], pathname: string) {
 
 function AppSidebar({ pathname }: { pathname: string }) {
   return (
-    <aside className="sticky top-0 z-20 hidden h-dvh w-56 shrink-0 flex-col border-r border-line bg-surface md:flex">
+    <aside className="sticky top-0 z-20 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-surface md:flex">
       <div className="border-b border-line px-4 py-4">
         <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 items-center">
           <Wordmark compact />
-        </Link>
-        <Link
-          to="/"
-          className="mt-3 inline-flex min-h-10 items-center text-sm text-muted hover:text-fg"
-        >
-          ← Home
         </Link>
       </div>
       <nav className="flex flex-col gap-1 px-2 py-3">
@@ -238,15 +236,27 @@ function AppSidebar({ pathname }: { pathname: string }) {
           );
         })}
       </nav>
-      <div className="mt-auto border-t border-line px-3 py-4">
-        <Link
-          to="/docs"
-          className="mb-3 inline-flex min-h-10 items-center text-sm text-muted hover:text-fg"
-        >
+      <div className="mt-auto space-y-4 border-t border-line px-3 py-4">
+        <div className="rounded-lg border border-line bg-bg px-3 py-3">
+          <p className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-faint">
+            <span className="size-1.5 rounded-full bg-paid" aria-hidden />
+            Live network
+          </p>
+          <p className="mt-2 text-xs text-muted">Creditcoin CC3 · USDC Sepolia</p>
+          <a
+            href={`${CREDITCOIN_EXPLORER}/address/${PAIDLINE_ADDRESS}`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-1 inline-block font-mono text-[11px] text-fg underline-offset-4 hover:underline"
+          >
+            {shortAddr(PAIDLINE_ADDRESS, 4)}
+          </a>
+        </div>
+        <Link to="/docs" className="inline-flex min-h-10 items-center text-sm text-muted hover:text-fg">
           Documentation
         </Link>
         <WalletButton />
-        <div className="mt-3 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <span className="text-xs text-muted">Theme</span>
           <ThemeToggle />
         </div>

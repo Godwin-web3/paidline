@@ -1,36 +1,36 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { NetworkPills } from "@/components/network-pills";
 import { OpenBoard } from "@/components/open-board";
 import { SettledFeed } from "@/components/settled-feed";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 
-export const Route = createFileRoute("/board")({ component: MarketplacePage });
+export const Route = createFileRoute("/board")({
+  head: () => ({ meta: [{ title: "Marketplace · Paidline" }] }),
+  component: MarketplacePage,
+});
 
 function MarketplacePage() {
   return (
     <main>
       <section className="border-b border-line">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-          <p className="text-xs uppercase tracking-wide text-muted">Marketplace</p>
-          <h1 className="mt-2 font-display text-4xl tracking-tight sm:text-5xl">
-            What’s for sale.
-          </h1>
+          <p className="kicker">Marketplace</p>
+          <h1 className="mt-2 font-display text-4xl tracking-tight sm:text-5xl">What’s for sale.</h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-muted">
-            Every listing is public. There is no waiting list and no chosen buyer. Send the exact
-            USDC and you claim it. The seller receives the dollars. You receive the locked credit.
+            Every funded listing is public. There is no waiting list and no chosen buyer. Send the
+            exact USDC and you claim it.
           </p>
-          <div className="mt-8">
-            <OpenBoard />
+          <NetworkPills className="mt-6" />
+          <div className="mt-10">
+            <OpenBoard searchable />
           </div>
-          <p className="mt-6 text-xs text-faint">
-            Looking is free. Connect a wallet only when you pay. Demo USDC on Ethereum Sepolia.
-          </p>
         </div>
       </section>
 
       <section className="border-b border-line">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-          <p className="text-xs uppercase tracking-wide text-muted">Already paid</p>
+          <p className="kicker">Already paid</p>
           <h2 className="mt-2 font-display text-3xl tracking-tight">Recently confirmed</h2>
           <div className="mt-6">
             <SettledFeed />

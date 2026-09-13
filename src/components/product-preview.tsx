@@ -1,10 +1,12 @@
 import { Check } from "lucide-react";
+import { PAIDLINE_ADDRESS } from "@/lib/paidline/constants";
+import { shortAddr } from "@/lib/utils";
 
 export function ProductPreview() {
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-sheet">
       <div className="flex items-center justify-between border-b border-line px-4 py-3">
-        <p className="text-xs uppercase tracking-wide text-muted">Invoice #4821</p>
+        <p className="text-xs uppercase tracking-wide text-muted">Listing #1</p>
         <span className="inline-flex items-center gap-1.5 rounded-full border border-paid/35 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-paid">
           <Check className="size-3" strokeWidth={2.5} />
           Paid
@@ -19,7 +21,7 @@ export function ProductPreview() {
         <dl className="mt-6 grid gap-4 border-t border-rule pt-5 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-ink-muted">Chain</dt>
-            <dd>Ethereum</dd>
+            <dd>Ethereum Sepolia</dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-ink-muted">Token</dt>
@@ -27,22 +29,22 @@ export function ProductPreview() {
           </div>
           <div className="flex min-w-0 justify-between gap-4">
             <dt className="shrink-0 text-ink-muted">Destination</dt>
-            <dd className="truncate font-mono text-xs">0x6e88…a2c7</dd>
+            <dd className="truncate font-mono text-xs">Seller wallet</dd>
           </div>
           <div className="flex justify-between gap-4">
-            <dt className="text-ink-muted">Release</dt>
-            <dd>Locked Creditcoin</dd>
+            <dt className="text-ink-muted">Checked by</dt>
+            <dd className="truncate font-mono text-xs">{shortAddr(PAIDLINE_ADDRESS, 4)}</dd>
           </div>
         </dl>
       </div>
       <div className="grid grid-cols-2 divide-x divide-line border-t border-line text-xs">
         <div className="px-4 py-3">
           <p className="uppercase tracking-wide text-faint">Source</p>
-          <p className="mt-1 font-mono text-muted">0x4f91…c12a</p>
+          <p className="mt-1 text-muted">Sepolia transfer</p>
         </div>
         <div className="px-4 py-3">
-          <p className="uppercase tracking-wide text-faint">Checked by</p>
-          <p className="mt-1 text-fg">The contract</p>
+          <p className="uppercase tracking-wide text-faint">Stamp</p>
+          <p className="mt-1 text-fg">Creditcoin · isPaid</p>
         </div>
       </div>
     </div>

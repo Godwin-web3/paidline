@@ -5,7 +5,10 @@ import { SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { getGate, type GateBody } from "@/lib/paidline/invoices";
 import { formatUnits } from "@/lib/utils";
 
-export const Route = createFileRoute("/gate/$id")({ component: GatePage });
+export const Route = createFileRoute("/gate/$id")({
+  head: () => ({ meta: [{ title: "Gate · Paidline" }] }),
+  component: GatePage,
+});
 
 function GatePage() {
   const { id } = Route.useParams();
@@ -36,7 +39,7 @@ function GatePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
-      <p className="text-xs uppercase tracking-wide text-muted">API</p>
+      <p className="kicker">API</p>
       <h1 className="mt-1 font-display text-3xl tracking-tight">GET /api/gate/{id}</h1>
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
         Unpaid listings return 402. Paid listings return 200. The body is JSON. Paidline does not

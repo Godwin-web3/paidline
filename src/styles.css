@@ -35,6 +35,7 @@
   --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
 
   --shadow-sheet: 0 24px 48px -28px rgb(0 0 0 / 0.55);
+  --shadow-lift: 0 18px 36px -22px rgb(0 0 0 / 0.5);
 }
 
 html.light {
@@ -57,6 +58,7 @@ html.light {
   --color-warn: #8a6b2b;
   --color-bad: #9a4a42;
   --shadow-sheet: 0 20px 40px -24px rgb(20 17 14 / 0.25);
+  --shadow-lift: 0 16px 32px -20px rgb(20 17 14 / 0.18);
 }
 
 @layer base {
@@ -144,6 +146,19 @@ html.light {
   .paper-tooth {
     background-image: url("/brand/paper.jpg");
     background-size: 420px;
+  }
+
+  .kicker {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .hairline {
+    height: 1px;
+    background: var(--color-line);
   }
 }
 

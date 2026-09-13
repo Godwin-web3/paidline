@@ -8,7 +8,10 @@ import { useSession } from "@/lib/paidline/session";
 import { createOnchainInvoice, hasWallet } from "@/lib/paidline/wallet";
 import { parseUnits, shortAddr } from "@/lib/utils";
 
-export const Route = createFileRoute("/new")({ component: NewInvoice });
+export const Route = createFileRoute("/new")({
+  head: () => ({ meta: [{ title: "New listing · Paidline" }] }),
+  component: NewInvoice,
+});
 
 const DUE_OPTIONS = [
   { hours: 24, label: "1 day" },
@@ -82,17 +85,19 @@ function NewInvoice() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-      <p className="text-xs uppercase tracking-wide text-muted">New listing</p>
+      <p className="kicker">New listing</p>
       <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Create a listing</h1>
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-        Name what you’re selling, the USDC price, and the credit you lock. It goes public as soon as
-        you publish. First matching payment claims it.
+        Name the work, the exact USDC price, and the Creditcoin you lock. It goes public as soon as
+        the transaction confirms. First matching payment claims it.
         {address ? (
           <>
             {" "}
             USDC lands at <span className="font-mono text-fg">{shortAddr(address, 4)}</span>.
           </>
-        ) : null}
+        ) : (
+          <> Connect a Creditcoin wallet to set the destination and publish.</>
+        )}
       </p>
 
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-2">

@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { PaperSlip } from "@/components/paper-slip";
+import { BoardSkeleton } from "@/components/skeleton";
 import { Button } from "@/components/ui/button";
 import { SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { listInvoices } from "@/lib/paidline/invoices";
@@ -10,7 +11,10 @@ import { useSession } from "@/lib/paidline/session";
 import type { InvoiceWire } from "@/lib/paidline/types";
 import { formatDue, formatUnits, shortAddr } from "@/lib/utils";
 
-export const Route = createFileRoute("/invoices")({ component: Invoices });
+export const Route = createFileRoute("/invoices")({
+  head: () => ({ meta: [{ title: "Your listings · Paidline" }] }),
+  component: Invoices,
+});
 
 function Invoices() {
   const address = useSession((s) => s.address);
@@ -75,11 +79,11 @@ function Invoices() {
           </p>
         ) : null}
         {!ready ? (
-          <p className="text-sm text-muted">Loading…</p>
+          <BoardSkeleton rows={4} />
         ) : !address ? (
           <DisconnectedDesk onConnect={() => void connect()} />
         ) : invoices === null && !loadError ? (
-          <p className="text-sm text-muted">Loading listings…</p>
+          <BoardSkeleton rows={4} />
         ) : invoices && invoices.length === 0 ? (
           <EmptyDesk />
         ) : invoices ? (
@@ -111,10 +115,12 @@ function Invoices() {
 
 function DisconnectedDesk({ onConnect }: { onConnect: () => void }) {
   return (
-    <div className="rounded-xl border border-line bg-surface p-5 sm:p-6">
-      <p className="font-display text-2xl tracking-tight">Connect to see your listings</p>
+    <div className="rounded-xl border border-line bg-surface p-6 sm:p-8">
+      <p className="kicker">Wallet</p>
+      <p className="mt-2 font-display text-2xl tracking-tight">Connect to see your listings</p>
       <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
-        Listings are tied to the wallet that published them.
+        Listings are tied to the Creditcoin wallet that published them. Looking at the marketplace
+        does not require a wallet.
       </p>
       <Button className="mt-5" onClick={onConnect}>
         Connect wallet

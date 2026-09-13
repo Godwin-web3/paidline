@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { InvoiceSheet, SheetMeta } from "@/components/invoice-sheet";
+import { SheetSkeleton } from "@/components/skeleton";
 import {
   CREDITCOIN_EXPLORER,
   LOCAL_DECIMALS,
@@ -16,7 +17,10 @@ import type { InvoiceWire } from "@/lib/paidline/types";
 import { cancelOnchain, hasWallet } from "@/lib/paidline/wallet";
 import { copyText, formatDue, formatUnits, shortAddr } from "@/lib/utils";
 
-export const Route = createFileRoute("/invoice/$id")({ component: SellerInvoice });
+export const Route = createFileRoute("/invoice/$id")({
+  head: () => ({ meta: [{ title: "Listing · Paidline" }] }),
+  component: SellerInvoice,
+});
 
 function SellerInvoice() {
   const { id } = Route.useParams();
@@ -40,8 +44,8 @@ function SellerInvoice() {
 
   if (invoice === undefined) {
     return (
-      <main className="mx-auto max-w-lg px-4 py-16">
-        <p className="text-sm text-muted">Reading invoice #{invoiceId}…</p>
+      <main className="mx-auto max-w-lg px-4 py-10">
+        <SheetSkeleton />
       </main>
     );
   }
@@ -134,13 +138,16 @@ function SellerInvoice() {
             ) : null}
           </dl>
         </InvoiceSheet>
-        <figure className="overflow-hidden rounded-xl">
-          <img
-            src="/brand/specimen.jpg"
-            alt="Pressed seal on an invoice"
-            className="h-full min-h-64 w-full object-cover"
-          />
-        </figure>
+        <aside className="rounded-xl border border-line bg-surface p-5">
+          <p className="kicker">Share</p>
+          <p className="mt-3 text-sm leading-relaxed text-muted">
+            Send the payment link. The buyer does not need a Creditcoin wallet. They send exact USDC
+            on Ethereum Sepolia.
+          </p>
+          <p className="mt-4 font-mono text-xs text-faint">
+            Merchant {shortAddr(invoice.merchant, 4)}
+          </p>
+        </aside>
       </div>
 
       {invoice.status === "paid" ? (

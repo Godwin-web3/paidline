@@ -15,6 +15,7 @@ export function InvoiceSheet({
         className,
       )}
     >
+      <div aria-hidden className="absolute inset-x-0 top-0 h-1 bg-ink" />
       <div aria-hidden className="pointer-events-none absolute inset-0 opacity-50 mix-blend-multiply paper-tooth" />
       <div className="relative">{children}</div>
     </div>

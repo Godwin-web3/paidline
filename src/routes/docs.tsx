@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { CodeBlock } from "@/components/code-block";
+import { NetworkPills } from "@/components/network-pills";
+import { SiteFooter } from "@/components/site-footer";
 import {
   CREDITCOIN_EXPLORER,
   NETWORKS,
@@ -7,9 +10,11 @@ import {
   SEPOLIA_EXPLORER,
   USDC_SEPOLIA,
 } from "@/lib/paidline/constants";
-import { SiteFooter } from "@/components/site-footer";
 
-export const Route = createFileRoute("/docs")({ component: DocsPage });
+export const Route = createFileRoute("/docs")({
+  head: () => ({ meta: [{ title: "Docs · Paidline" }] }),
+  component: DocsPage,
+});
 
 const TOC = [
   { href: "#what", label: "What it is" },
@@ -58,14 +63,14 @@ if (res.status === 200) {
 function DocsPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12">
-      <aside className="mb-10 lg:sticky lg:top-8 lg:mb-0 lg:self-start">
-        <p className="text-xs uppercase tracking-wide text-faint">Documentation</p>
-        <nav className="mt-4 flex flex-col gap-1">
+      <aside className="mb-10 lg:sticky lg:top-20 lg:mb-0 lg:self-start">
+        <p className="kicker">Documentation</p>
+        <nav className="mt-4 flex flex-col gap-0.5">
           {TOC.map((item) => (
             <a
               key={item.href}
               href={item.href}
-              className="inline-flex min-h-10 items-center text-sm text-muted hover:text-fg"
+              className="inline-flex min-h-10 items-center rounded-md px-2 text-sm text-muted hover:bg-raised hover:text-fg"
             >
               {item.label}
             </a>
@@ -74,12 +79,34 @@ function DocsPage() {
       </aside>
 
       <article className="max-w-2xl pb-16">
-        <h1 className="font-display text-4xl tracking-tight sm:text-5xl">Docs</h1>
+        <p className="kicker">Protocol</p>
+        <h1 className="mt-2 font-display text-4xl tracking-tight sm:text-5xl">Docs</h1>
         <p className="mt-4 text-base leading-relaxed text-muted">
           Paidline is a public marketplace with a payment checker. You list work on Creditcoin.
           Buyers pay USDC on Ethereum. The contract is the only thing that may say the listing is
           paid.
         </p>
+        <NetworkPills className="mt-6" />
+        <div className="mt-8 rounded-xl border border-line bg-surface p-5">
+          <p className="text-[11px] uppercase tracking-wide text-faint">Live contract</p>
+          <p className="mt-2 break-all font-mono text-sm">{PAIDLINE_ADDRESS}</p>
+          <p className="mt-3 text-xs leading-relaxed text-muted">
+            Verified on Blockscout. Inherits ASCBase. Replay is keyed on Attestcoin query id.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3 text-sm">
+            <a
+              href={`${CREDITCOIN_EXPLORER}/address/${PAIDLINE_ADDRESS}`}
+              target="_blank"
+              rel="noreferrer"
+              className="underline decoration-line underline-offset-4"
+            >
+              Open on explorer
+            </a>
+            <Link to="/pay" className="underline decoration-line underline-offset-4">
+              Live marketplace
+            </Link>
+          </div>
+        </div>
 
         <section id="what" className="scroll-mt-24 border-t border-line pt-12 mt-12">
           <h2 className="font-display text-3xl tracking-tight">What it is</h2>
@@ -177,9 +204,9 @@ function DocsPage() {
             Other contracts ask this. Unknown invoices return false. True only after a matching
             remote payment has been verified and local value released.
           </p>
-          <pre className="mt-6 overflow-x-auto rounded-xl border border-line bg-surface p-4 font-mono text-xs leading-relaxed text-fg">
-            {ISPAID}
-          </pre>
+          <div className="mt-6">
+            <CodeBlock label="Solidity" code={ISPAID} />
+          </div>
           <p className="mt-4 font-mono text-xs text-faint">{PAIDLINE_ADDRESS}</p>
         </section>
 
@@ -189,9 +216,9 @@ function DocsPage() {
             Drop this in front of a resource. Unpaid invoices return 402 with a pay URL. Paid
             invoices return 200. Retry after the stamp. No new Solidity.
           </p>
-          <pre className="mt-6 overflow-x-auto rounded-xl border border-line bg-surface p-4 font-mono text-xs leading-relaxed text-fg">
-            {GATE}
-          </pre>
+          <div className="mt-6">
+            <CodeBlock label="TypeScript" code={GATE} />
+          </div>
           <p className="mt-4">
             <Link to="/gate" className="text-sm underline decoration-line underline-offset-4">
               Try the gate

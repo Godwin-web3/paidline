@@ -4,13 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { InvoiceSheet, SheetMeta } from "@/components/invoice-sheet";
+import { SheetSkeleton } from "@/components/skeleton";
 import { SEPOLIA_EXPLORER, SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { confirmPayment, findMatchingTransfer, getInvoice } from "@/lib/paidline/invoices";
 import type { InvoiceWire } from "@/lib/paidline/types";
 import { hasWallet, sendUsdc } from "@/lib/paidline/wallet";
 import { copyText, formatUnits, isTxHash, shortAddr } from "@/lib/utils";
 
-export const Route = createFileRoute("/pay/$id")({ component: BuyerPay });
+export const Route = createFileRoute("/pay/$id")({
+  head: () => ({ meta: [{ title: "Checkout · Paidline" }] }),
+  component: BuyerPay,
+});
 
 type Phase = "idle" | "sending" | "watching" | "proving" | "paid" | "failed";
 
@@ -69,8 +73,8 @@ function BuyerPay() {
 
   if (invoice === undefined) {
     return (
-      <main className="mx-auto max-w-md px-4 py-16">
-        <p className="text-sm text-muted">Loading invoice…</p>
+      <main className="mx-auto max-w-md px-4 py-8 sm:py-10">
+        <SheetSkeleton />
       </main>
     );
   }
@@ -78,8 +82,12 @@ function BuyerPay() {
   if (!invoice) {
     return (
       <main className="mx-auto max-w-md px-4 py-16">
-        <h1 className="font-display text-3xl">This invoice is gone</h1>
-        <p className="mt-2 text-sm text-muted">Ask the seller for a current link.</p>
+        <p className="kicker">Checkout</p>
+        <h1 className="mt-2 font-display text-3xl">This listing is gone</h1>
+        <p className="mt-2 text-sm text-muted">Ask the seller for a current link, or pick another listing.</p>
+        <Link to="/pay" className="mt-6 inline-block text-sm underline underline-offset-4">
+          Back to marketplace
+        </Link>
       </main>
     );
   }
@@ -123,7 +131,7 @@ function BuyerPay() {
         <p className="text-xs uppercase tracking-wide text-ink-muted">Listing #{invoice.id}</p>
         <h1 className="mt-3 font-display text-4xl tracking-tight text-ink">{invoice.title}</h1>
         <p className="mt-2 text-sm text-ink-muted">
-          Send {amount} USDC on Ethereum. First matching payment claims this listing.
+          Send exactly {amount} USDC on Ethereum Sepolia. First matching payment claims this listing.
         </p>
 
         <dl className="mt-8 grid gap-5">
@@ -196,13 +204,13 @@ function BuyerPay() {
             {phase === "sending"
               ? "Waiting on wallet…"
               : phase === "proving"
-                ? "Confirming payment…"
+                ? "Confirming on Creditcoin…"
                 : `Pay ${amount} USDC`}
           </Button>
           <p className="text-center text-xs text-muted">
             {phase === "watching" || phase === "proving"
-              ? "Payment seen. The contract is checking it."
-              : "Or send from any wallet. This page watches for the exact amount."}
+              ? "Payment seen on Ethereum. The contract is checking the Attestcoin proof."
+              : "Or send from any wallet to the address above. This page watches for the exact amount."}
           </p>
           <button
             type="button"

@@ -18,7 +18,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "List work on a public marketplace. Anyone pays in USDC. Paidline confirms it on-chain.",
+          "Public marketplace on Creditcoin. Buyers pay USDC on Ethereum. Attestcoin proves the transfer. The contract is the only thing that may say it is paid.",
       },
     ],
     links: [

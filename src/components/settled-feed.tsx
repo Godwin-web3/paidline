@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { BoardSkeleton } from "@/components/skeleton";
 import { SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { listSettled } from "@/lib/paidline/invoices";
 import type { InvoiceWire } from "@/lib/paidline/types";
@@ -15,19 +16,23 @@ export function SettledFeed() {
   }, []);
 
   if (invoices === null) {
-    return <p className="text-sm text-muted">Loading paid listings…</p>;
+    return <BoardSkeleton rows={3} />;
   }
 
   if (invoices.length === 0) {
     return (
-      <p className="text-sm leading-relaxed text-muted">
-        No paid listings yet. The first confirmed payment will appear here.
-      </p>
+      <div className="rounded-xl border border-dashed border-line bg-surface px-5 py-8">
+        <p className="font-display text-xl tracking-tight">No settlements yet</p>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">
+          When a listing is paid, it shows here with both explorer links. The board is live — the
+          first matching USDC will stamp the first receipt.
+        </p>
+      </div>
     );
   }
 
   return (
-    <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
+    <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
       {invoices.map((inv) => (
         <li key={inv.id}>
           <Link

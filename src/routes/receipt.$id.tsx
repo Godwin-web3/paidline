@@ -11,6 +11,7 @@ import { getInvoice } from "@/lib/paidline/invoices";
 import { formatUnits, shortAddr } from "@/lib/utils";
 
 export const Route = createFileRoute("/receipt/$id")({
+  head: () => ({ meta: [{ title: "Receipt · Paidline" }] }),
   loader: async ({ params }) => {
     const id = Number(params.id);
     if (!Number.isInteger(id) || id < 1) return null;
@@ -49,7 +50,7 @@ function ReceiptPage() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 sm:py-12">
-      <p className="mb-4 text-xs uppercase tracking-wide text-muted">Receipt</p>
+      <p className="mb-4 kicker">Receipt</p>
       <InvoiceSheet className="p-6 sm:p-8">
         <div className="flex items-start justify-between gap-4">
           <div>

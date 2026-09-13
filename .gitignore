@@ -12,3 +12,4 @@ contracts/out/
 *.log
 .DS_Store
 AGENTS.md
+agent-tools/

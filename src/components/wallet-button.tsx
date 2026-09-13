@@ -8,7 +8,12 @@ export function WalletButton({ compact = false }: { compact?: boolean }) {
   const connect = useSession((s) => s.connect);
 
   if (address) {
-    return <span className="font-mono text-xs text-muted">{shortAddr(address, 4)}</span>;
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full border border-line bg-bg px-2.5 py-1.5">
+        <span className="size-1.5 rounded-full bg-paid" aria-hidden />
+        <span className="font-mono text-xs text-fg">{shortAddr(address, 4)}</span>
+      </span>
+    );
   }
 
   return (
