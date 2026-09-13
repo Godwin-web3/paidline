@@ -484,18 +484,25 @@ async function main() {
   await page.evaluate(() => document.getElementById("how")?.scrollIntoView({ behavior: "instant", block: "start" }));
   await waitText(page, "Four steps");
   const stepNames = ["List", "Pay", "Prove", "Confirm"];
-  for (const name of stepNames) {
-    if (remaining(BEATS.how) < 1200) break;
+  const hoverHowStep = async (name) => {
     const step = page.locator("#how").getByRole("heading", { name, exact: true }).first();
-    if ((await step.count()) > 0) {
-      const box = await step.boundingBox().catch(() => null);
-      if (box) await move(page, box.x + 40, box.y + 16, 12);
-      await step.hover().catch(() => {});
+    if ((await step.count()) === 0) return;
+    const box = await step.boundingBox().catch(() => null);
+    if (box) await move(page, box.x + 40, box.y + 16, 12);
+    await step.hover().catch(() => {});
+  };
+  // Keep #how pinned. Do not hover page-global "isPaid" — that string also
+  // lives on a landing card and Playwright will scroll it back into view.
+  while (remaining(BEATS.how) > 1400) {
+    await page.evaluate(() => document.getElementById("how")?.scrollIntoView({ behavior: "instant", block: "start" }));
+    for (const name of stepNames) {
+      if (remaining(BEATS.how) < 1400) break;
+      await hoverHowStep(name);
+      await sleep(page, Math.min(2400, Math.max(400, remaining(BEATS.how) / 6)));
     }
-    await sleep(page, Math.min(2800, Math.max(500, remaining(BEATS.how) / 6)));
+    const ask = page.locator("#how").getByText("Other apps ask").first();
+    if ((await ask.count()) > 0) await ask.hover().catch(() => {});
   }
-  await hoverText(page, "isPaid");
-  await breathe(page, 1600, BEATS.how);
   await holdUntil(page, BEATS.how);
 
   // checker — start marketplace fetch under this frame
