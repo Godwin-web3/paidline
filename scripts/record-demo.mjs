@@ -137,26 +137,28 @@ async function caption(page, text) {
   }, text);
 }
 
+const CURSOR_CSS = [
+  "position:fixed",
+  "z-index:2147483646",
+  "left:640px",
+  "top:360px",
+  "width:22px",
+  "height:22px",
+  "margin:-2px 0 0 -2px",
+  "border-radius:50%",
+  "border:2px solid #f4efe8",
+  "background:rgba(244,239,232,.28)",
+  "box-shadow:0 0 0 1px rgba(20,17,14,.55), 0 8px 18px rgba(0,0,0,.35)",
+  "pointer-events:none",
+  "transition:left .08s linear, top .08s linear",
+].join(";");
+
 async function injectCursor(page) {
-  await page.evaluate(() => {
+  await page.evaluate((css) => {
     if (document.getElementById("pl-cursor")) return;
     const c = document.createElement("div");
     c.id = "pl-cursor";
-    c.style.cssText = [
-      "position:fixed",
-      "z-index:2147483646",
-      "left:640px",
-      "top:360px",
-      "width:22px",
-      "height:22px",
-      "margin:-2px 0 0 -2px",
-      "border-radius:50%",
-      "border:2px solid #f4efe8",
-      "background:rgba(244,239,232,.28)",
-      "box-shadow:0 0 0 1px rgba(20,17,14,.55), 0 8px 18px rgba(0,0,0,.35)",
-      "pointer-events:none",
-      "transition:left .08s linear, top .08s linear",
-    ].join(";");
+    c.style.cssText = css;
     document.documentElement.appendChild(c);
     document.addEventListener(
       "mousemove",
@@ -166,7 +168,37 @@ async function injectCursor(page) {
       },
       true,
     );
-  });
+  }, CURSOR_CSS);
+}
+
+/** Iframe mouse events never reach the host overlay — paint left/top ourselves. */
+async function paintCursor(x, y) {
+  if (!filmPage) return;
+  await filmPage.evaluate(
+    ({ x, y, css }) => {
+      const place = (doc) => {
+        if (!doc) return;
+        let c = doc.getElementById("pl-cursor");
+        if (!c) {
+          c = doc.createElement("div");
+          c.id = "pl-cursor";
+          c.style.cssText = css;
+          doc.documentElement.appendChild(c);
+        }
+        c.style.left = `${x}px`;
+        c.style.top = `${y}px`;
+      };
+      place(document);
+      for (const frame of document.querySelectorAll('iframe[id^="pl-swap-"]')) {
+        try {
+          if (frame.dataset.shown === "1") place(frame.contentDocument);
+        } catch {
+          /* cross-origin — host overlay still sits above the iframe */
+        }
+      }
+    },
+    { x, y, css: CURSOR_CSS },
+  );
 }
 
 async function jumpY(page, y) {
@@ -271,18 +303,32 @@ async function startFrame(page, url) {
 async function revealFrame(page, id, needle, captionText) {
   const frame = page.frameLocator(`#${id}`);
   await frame.getByText(needle, { exact: false }).first().waitFor({ state: "visible", timeout: 35000 });
-  await page.evaluate((keep) => {
-    const f = document.getElementById(keep);
-    if (f) {
-      f.style.opacity = "1";
-      f.style.pointerEvents = "auto";
-      f.style.zIndex = "2147483645";
-    }
-    document.querySelectorAll("iframe[id^='pl-swap-']").forEach((old) => {
-      if (old.id !== keep && old.dataset.shown === "1") old.remove();
-    });
-    if (f) f.dataset.shown = "1";
-  }, id);
+  await page.evaluate(
+    ({ keep, css }) => {
+      const f = document.getElementById(keep);
+      if (f) {
+        f.style.opacity = "1";
+        f.style.pointerEvents = "auto";
+        f.style.zIndex = "2147483645";
+        f.dataset.shown = "1";
+        try {
+          const doc = f.contentDocument;
+          if (doc && !doc.getElementById("pl-cursor")) {
+            const c = doc.createElement("div");
+            c.id = "pl-cursor";
+            c.style.cssText = css;
+            doc.documentElement.appendChild(c);
+          }
+        } catch {
+          /* host overlay still covers the iframe */
+        }
+      }
+      document.querySelectorAll("iframe[id^='pl-swap-']").forEach((old) => {
+        if (old.id !== keep && old.dataset.shown === "1") old.remove();
+      });
+    },
+    { keep: id, css: CURSOR_CSS },
+  );
   if (captionText) await caption(page, captionText);
   logScene("frame-reveal", { id, needle, caption: captionText, vo: voNow() });
   return frame;
@@ -300,35 +346,53 @@ async function revealByBeat(page, id, needle, captionText, beatMs) {
 
 async function move(_target, x, y, steps = 16) {
   const host = filmPage ?? _target;
-  if (!host?.mouse) return;
-  await host.mouse.move(x, y, { steps });
+  if (host?.mouse) await host.mouse.move(x, y, { steps });
+  await paintCursor(x, y);
 }
 
 /**
- * Point the filmed cursor at visible copy. `mayScroll` is off on the landing
- * so Playwright hover cannot drag #how into view (PR #4 failure mode).
+ * Read the element's own viewport box (works inside fullscreen iframes),
+ * optionally scroll it into the proving slot, then rest the laser there.
+ * Landing calls pass mayScroll=false so Playwright cannot drag #how on screen.
  */
-async function hoverText(root, text, { mayScroll = false } = {}) {
-  const loc = root.getByText(text, { exact: false }).first();
+async function pointLocator(loc, { mayScroll = false, block = "center" } = {}) {
   if ((await loc.count()) === 0) return false;
-  if (mayScroll) {
-    await loc.scrollIntoViewIfNeeded({ timeout: 2500 }).catch(() => {});
+  const box = await loc
+    .evaluate((el, next) => {
+      if (next.mayScroll) el.scrollIntoView({ behavior: "instant", block: next.block });
+      const r = el.getBoundingClientRect();
+      return {
+        x: r.left,
+        y: r.top,
+        w: r.width,
+        h: r.height,
+        text: (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 72),
+      };
+    }, { mayScroll, block })
+    .catch(() => null);
+  if (!box || box.w < 2 || box.h < 2) {
+    logScene("point-miss", { reason: "no-box" });
+    return false;
   }
-  const box = await loc.boundingBox().catch(() => null);
-  if (!box || box.width < 2 || box.height < 2) return false;
-  if (box.y > 720 || box.y + box.height < 0) return false;
-  await move(filmPage, box.x + Math.min(box.width * 0.45, 180), box.y + box.height * 0.55, 14);
-  if (mayScroll) await loc.hover({ timeout: 1500 }).catch(() => {});
+  if (box.y > 700 || box.y + box.h < 8) {
+    logScene("point-offscreen", box);
+    return false;
+  }
+  const x = box.x + Math.min(Math.max(box.w * 0.38, 10), 120);
+  const y = box.y + box.h * 0.55;
+  await move(filmPage, x, y, 12);
+  logScene("point", { x: Math.round(x), y: Math.round(y), hit: box.text });
   return true;
 }
 
+async function hoverText(root, text, opts = {}) {
+  const { exact = false, ...rest } = opts;
+  const loc = text instanceof RegExp ? root.getByText(text).first() : root.getByText(text, { exact }).first();
+  return pointLocator(loc, rest);
+}
+
 async function hoverHref(page, href) {
-  const loc = page.locator(`a[href="${href}"]`).first();
-  if ((await loc.count()) === 0) return false;
-  const box = await loc.boundingBox().catch(() => null);
-  if (!box || box.y > 700 || box.y + box.height < 8) return false;
-  await move(page, box.x + Math.min(box.width * 0.42, 160), box.y + Math.min(40, box.height * 0.45), 16);
-  return true;
+  return pointLocator(page.locator(`a[href="${href}"]`).first(), { mayScroll: false, block: "nearest" });
 }
 
 /** Stay still on the last target. Laser pointer — no idle wander. */
@@ -343,18 +407,10 @@ async function pointAndHold(root, text, untilVoMs, opts = {}) {
   return true;
 }
 
-async function typeInto(page, placeholder, text, delay, untilVoMs) {
-  const field = page.getByPlaceholder(placeholder).first();
-  await field.click();
-  const remain = remaining(untilVoMs);
-  // Snappy: fill when the window is tight; otherwise a short sequential pass.
-  if (remain < 1400) {
-    await field.fill(text);
-    return;
-  }
-  const per = Math.max(4, Math.min(delay, Math.floor((remain - 400) / Math.max(text.length, 1))));
-  await field.fill("");
-  await field.pressSequentially(text, { delay: per });
+async function fillInto(root, placeholder, text) {
+  const field = root.getByPlaceholder(placeholder).first();
+  await field.waitFor({ state: "visible", timeout: 8000 });
+  await field.fill(text);
 }
 
 async function warmup(context) {
@@ -526,9 +582,7 @@ async function walkHow(page) {
 
   const hoverHowStep = async (name) => {
     const step = page.locator("#how").getByRole("heading", { name, exact: true }).first();
-    if ((await step.count()) === 0) return;
-    const box = await step.boundingBox().catch(() => null);
-    if (box) await move(page, box.x + 40, box.y + 16, 12);
+    await pointLocator(step, { mayScroll: false, block: "nearest" });
   };
 
   // Whisper silences in this window land near List / Pay / Prove / Confirm.
@@ -635,37 +689,29 @@ async function main() {
 
   let view = await revealByBeat(page, marketId, "open", "Marketplace", BEATS.how);
   logScene("marketplace", { vo: voNow() });
-  await hoverText(view, "open", { mayScroll: true });
+  await hoverText(view, /\d+ open/, { mayScroll: true, block: "nearest" });
   void rewarm(warmPage, BASE + "/new", "create a listing");
   const createId = await startFrame(page, BASE + "/new");
   await holdOn(page, BEATS.marketplace - 800);
 
   view = await revealByBeat(page, createId, "Create a listing", "Create a listing", BEATS.marketplace);
   logScene("create", { vo: voNow() });
-  await typeInto(view, "September retainer", "September research brief", 8, 104_000);
-  await typeInto(view, "250.00", "250", 16, 107_000);
-  await typeInto(view, "Delivery of the work", "Sealed brief, unlocked on payment", 6, 110_500);
-  if (remaining(BEATS.create) > 1800) {
-    const workField = view.getByPlaceholder("Paste the deliverable or a link to it.");
-    await workField.click();
-    await workField.fill("Delivery notes. Buyers only see this after isPaid is true.");
-  }
-  if (remaining(BEATS.create) > 900) {
-    await typeInto(view, "0.01", "0.01", 16, BEATS.create);
-  }
+  await fillInto(view, "September retainer", "September research brief");
+  await fillInto(view, "250.00", "250");
+  await fillInto(view, "Delivery of the work", "Sealed brief, unlocked on payment");
+  await fillInto(view, "Paste the deliverable or a link to it.", "Delivery notes. Buyers only see this after isPaid is true.");
+  await fillInto(view, "0.01", "0.01");
   // /pay/9 is the slow RPC page — start it during publish, not after unpaid.
   void rewarm(warmPage, BASE + "/pay/9", "get the work");
   const paidId = await startFrame(page, BASE + "/pay/9");
   void rewarm(warmPage, BASE + "/pay/1", "locked");
   const unpaidId = await startFrame(page, BASE + "/pay/1");
-  await hoverText(view, "250", { mayScroll: true });
+  await hoverText(view, /250\.\d+/, { mayScroll: true, block: "center" });
   await holdOn(page, BEATS.create - 800);
 
   view = await revealByBeat(page, unpaidId, "Locked. It unlocks here", "Unpaid checkout · listing 1", BEATS.create);
   logScene("unpaid", { vo: voNow() });
-  const locked = view.getByText("Locked. It unlocks here").first();
-  await locked.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
-  await hoverText(view, "Locked. It unlocks here", { mayScroll: true });
+  await hoverText(view, "Locked. It unlocks here", { mayScroll: true, block: "center" });
   await holdOn(page, BEATS.unpaid - 800);
 
   view = await revealByBeat(page, paidId, "Get the work", "Paid · listing 9", BEATS.unpaid);
@@ -673,28 +719,29 @@ async function main() {
   void rewarm(warmPage, BASE + "/receipt/9", "10.000247");
   const receiptId = await startFrame(page, BASE + "/receipt/9");
   const gate9Id = await startFrame(page, GATE_BASE + "/gate/9");
-  const work = view.getByText("Get the work").first();
-  await work.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
-  await hoverText(view, "Get the work", { mayScroll: true });
+  await hoverText(view, "Get the work", { exact: true, mayScroll: true, block: "center" });
   logScene("paid-work-visible", { vo: voNow() });
   await holdOn(page, BEATS.paid - 800);
 
   view = await revealByBeat(page, receiptId, "10.000247", "Receipt · on-chain paid", BEATS.paid);
   logScene("receipt", { vo: voNow() });
-  await hoverText(view, "Ethereum transfer", { mayScroll: true });
+  const txLink = view.locator('a[href*="/tx/"]').first();
+  if (!(await pointLocator(txLink, { mayScroll: true, block: "center" }))) {
+    await hoverText(view, "Ethereum transfer", { mayScroll: true, block: "center" });
+  }
   void rewarm(warmPage, GATE_BASE + "/gate/1", "402");
   const gate1Id = await startFrame(page, GATE_BASE + "/gate/1");
   await holdOn(page, BEATS.receipt - 800);
 
   view = await revealByBeat(page, gate9Id, "Access granted", "GET /api/gate/9  →  200", BEATS.receipt);
   logScene("gate200", { vo: voNow() });
-  await hoverText(view, "200 OK", { mayScroll: true });
+  await hoverText(view, "200 OK", { exact: true, mayScroll: true, block: "center" });
   const docsId = await startFrame(page, BASE + "/docs");
   await holdOn(page, BEATS.gate200 - 800);
 
   view = await revealByBeat(page, gate1Id, "402 Payment Required", "GET /api/gate/1  →  402", BEATS.gate200);
   logScene("gate402", { vo: voNow() });
-  await hoverText(view, "402 Payment Required", { mayScroll: true });
+  await hoverText(view, "402 Payment Required", { exact: true, mayScroll: true, block: "center" });
   await holdOn(page, BEATS.gate402 - 800);
 
   view = await revealByBeat(page, docsId, "isPaid", "Other contracts call isPaid", BEATS.gate402);
@@ -705,9 +752,9 @@ async function main() {
     .catch(() => {});
   await caption(page, "Remote proof. Local unlock.");
   const isPaidHead = view.locator("#ispai h2").first();
-  const isPaidBox = await isPaidHead.boundingBox().catch(() => null);
-  if (isPaidBox) await move(page, isPaidBox.x + 40, isPaidBox.y + 16, 12);
-  else await hoverText(view, "Other contracts ask this", { mayScroll: true });
+  if (!(await pointLocator(isPaidHead, { mayScroll: true, block: "start" }))) {
+    await hoverText(view, "isPaid", { exact: true, mayScroll: true, block: "start" });
+  }
   await holdOn(page, Math.max(BEATS.docs, voiceMs + 400));
   logScene("end", { vo: voNow() });
 
