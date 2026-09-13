@@ -3,7 +3,8 @@
  * Timed browser walkthrough of the live Paidline app.
  *
  * Scenes are locked to absolute voiceover timestamps (VO t=0 after the title
- * card), not proportional weights. Mux title + public/demo.mp3 at the end.
+ * card), not proportional weights. Slow RPC pages are covered with the previous
+ * frame until real copy is on screen — never hold a skeleton as the shot.
  *
  *   DEMO_BASE=https://paidline.vercel.app node scripts/record-demo.mjs
  */
@@ -25,25 +26,37 @@ const TITLE_MS = 3000;
 
 /**
  * Absolute VO windows (ms). `until` is when the next topic must be on screen.
- * First 50s of video ≈ title + problem/product/board; how-it-works is up by ~0:53.
+ * how starts ~47s so video ~0:50 is the four-steps section.
  */
 const BEATS = {
   landingProblem: 24_000,
   landingProduct: 44_000,
-  landingBoard: 50_000,
+  landingBoard: 45_000,
   how: 80_000,
-  checker: 95_000,
+  checker: 88_000,
   marketplace: 115_000,
   create: 140_000,
-  unpaid: 160_000,
+  unpaid: 148_000,
   paid: 185_000,
-  receipt: 196_000,
-  gate200: 202_000,
-  gate402: 206_000,
-  docs: 210_000,
+  receipt: 194_000,
+  gate200: 200_000,
+  gate402: 205_000,
+  docs: 211_000,
 };
 
 let voZero = 0;
+
+function paintTitleOverlay() {
+  const el = document.createElement("div");
+  el.id = "pl-title";
+  el.style.cssText =
+    "position:fixed;inset:0;z-index:2147483647;background:#14110e;color:#f4efe8;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Georgia,serif";
+  el.innerHTML =
+    '<p style="font-size:64px;margin:0">Paidline</p>' +
+    '<p style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:22px;color:#c9bfb3;margin:18px 0 0">Public marketplace. On-chain paid.</p>' +
+    '<p style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;color:#8a8178;margin:72px 0 0">BUIDL CTC 2026 · Creditcoin · Attestcoin</p>';
+  document.documentElement.appendChild(el);
+}
 
 function audioDurationMs(path) {
   const probe = spawnSync(
@@ -130,14 +143,6 @@ async function smoothScroll(page, y, ms) {
   );
 }
 
-async function scrollSelector(page, selector, block = "center") {
-  const loc = page.locator(selector).first();
-  if ((await loc.count()) === 0) return;
-  await loc.evaluate((el, blk) => {
-    el.scrollIntoView({ behavior: "smooth", block: blk });
-  }, block);
-}
-
 async function waitText(page, needle, timeout = 25000) {
   await page.waitForFunction(
     (n) => document.body.innerText.toLowerCase().includes(n.toLowerCase()),
@@ -146,10 +151,47 @@ async function waitText(page, needle, timeout = 25000) {
   );
 }
 
-async function gotoReady(page, url, needle, captionText) {
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
-  if (needle) await waitText(page, needle);
+let swapSeq = 0;
+
+async function startFrame(page, url) {
+  swapSeq += 1;
+  const id = `pl-swap-${swapSeq}`;
+  await page.evaluate(
+    ({ href, id }) => {
+      const f = document.createElement("iframe");
+      f.id = id;
+      f.src = href;
+      f.style.cssText =
+        "position:fixed;inset:0;width:100%;height:100%;border:0;opacity:0;pointer-events:none;z-index:1";
+      document.documentElement.appendChild(f);
+    },
+    { href: url, id },
+  );
+  return id;
+}
+
+async function revealFrame(page, id, needle, captionText) {
+  const frame = page.frameLocator(`#${id}`);
+  await frame.getByText(needle, { exact: false }).first().waitFor({ state: "visible", timeout: 35000 });
+  await page.evaluate((keep) => {
+    const f = document.getElementById(keep);
+    if (f) {
+      f.style.opacity = "1";
+      f.style.pointerEvents = "auto";
+      f.style.zIndex = "2147483645";
+    }
+    document.querySelectorAll("iframe[id^='pl-swap-']").forEach((old) => {
+      if (old.id !== keep && old.dataset.shown === "1") old.remove();
+    });
+    if (f) f.dataset.shown = "1";
+  }, id);
   if (captionText) await caption(page, captionText);
+  return frame;
+}
+
+async function swapFrame(page, url, needle, captionText) {
+  const id = await startFrame(page, url);
+  return revealFrame(page, id, needle, captionText);
 }
 
 async function hoverText(page, text) {
@@ -194,45 +236,40 @@ async function warmup(context) {
   const p = await context.newPage();
   p.setDefaultTimeout(20000);
   const targets = [
-    BASE + "/",
-    BASE + "/pay",
-    BASE + "/pay/1",
-    BASE + "/new",
-    BASE + "/docs",
-    BASE + "/receipt/9",
-    GATE_BASE + "/gate/9",
-    GATE_BASE + "/gate/1",
-    BASE + "/pay/9",
+    [BASE + "/", "list work"],
+    [BASE + "/pay", "usdc"],
+    [BASE + "/pay/1", "locked"],
+    [BASE + "/new", "create a listing"],
+    [BASE + "/docs", "ispai"],
+    [BASE + "/receipt/9", "10.000247"],
+    [GATE_BASE + "/gate/9", "access granted"],
+    [GATE_BASE + "/gate/1", "402"],
+    [BASE + "/pay/9", "get the work"],
+    [BASE + "/", "already paid"],
   ];
-  for (const url of targets) {
+  for (const [url, needle] of targets) {
     try {
       await p.goto(url, { waitUntil: "domcontentloaded", timeout: 25000 });
-      if (url.endsWith("/pay/9")) {
-        await p.waitForFunction(
-          () => document.body.innerText.toLowerCase().includes("get the work"),
-          null,
-          { timeout: 20000 },
-        );
-      } else {
-        await p.waitForTimeout(500);
-      }
+      await p.waitForFunction((n) => document.body.innerText.toLowerCase().includes(n), needle, {
+        timeout: 20000,
+      });
     } catch {
-      /* still film against a cold page if warmup misses */
+      /* still film; covers hide a cold first paint */
     }
   }
   return p;
 }
 
-async function rewarmPaid(warmPage) {
+async function rewarm(warmPage, url, needle) {
   try {
-    await warmPage.goto(BASE + "/pay/9", { waitUntil: "domcontentloaded", timeout: 20000 });
-    await warmPage.waitForFunction(
-      () => document.body.innerText.toLowerCase().includes("get the work"),
-      null,
-      { timeout: 20000 },
-    );
+    await warmPage.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
+    if (needle) {
+      await warmPage.waitForFunction((n) => document.body.innerText.toLowerCase().includes(n), needle, {
+        timeout: 20000,
+      });
+    }
   } catch {
-    /* recording page will wait again */
+    /* recording page waits again under a cover */
   }
 }
 
@@ -337,179 +374,149 @@ async function main() {
   page.setDefaultTimeout(25000);
   page.setDefaultNavigationTimeout(30000);
 
-  await page.setContent(`<!doctype html><html><head><meta charset="utf-8"></head>
-  <body style="margin:0;background:#14110e;color:#f4efe8;font-family:Georgia,serif;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center">
-    <p style="font-size:64px;margin:0">Paidline</p>
-    <p style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:22px;color:#c9bfb3;margin:18px 0 0">Public marketplace. On-chain paid.</p>
-    <p style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:14px;color:#8a8178;margin:72px 0 0">BUIDL CTC 2026 · Creditcoin · Attestcoin</p>
-  </body></html>`);
+  await page.goto(BASE + "/", { waitUntil: "domcontentloaded", timeout: 30000 });
+  await waitText(page, "List work", 15000);
+  await page.evaluate(paintTitleOverlay);
   await sleep(page, TITLE_MS);
+  await page.evaluate(() => document.getElementById("pl-title")?.remove());
+  const actualTitleMs = TITLE_MS;
   voZero = Date.now();
-  console.log("vo_zero");
+  console.log("vo_zero", { actualTitleMs });
 
-  // 0:00–0:24 landing — problem framing
-  await gotoReady(page, BASE + "/", "judge walkthrough", "The problem");
-  await waitText(page, "Live listings");
+  // 0:00–0:24 landing — listings should already have arrived under the title
+  await caption(page, "The problem");
   console.log("beat landing-problem", voNow());
   await move(page, 300, 220, 18);
-  await sleep(page, Math.min(1800, Math.max(200, remaining(BEATS.landingProblem) / 4)));
   await hoverText(page, "Browse marketplace");
-  await breathe(page, 4000, BEATS.landingProblem);
+  await waitText(page, "Already paid", 12000).catch(() => {});
+  await breathe(page, 3500, BEATS.landingProblem);
   await holdUntil(page, BEATS.landingProblem);
 
   // 0:24–0:44 still landing — what Paidline is
   await caption(page, "What Paidline is");
   console.log("beat landing-product", voNow());
   await hoverText(page, "Already paid");
-  await sleep(page, 900);
+  await sleep(page, 800);
   await move(page, 980, 280, 20);
   await hoverText(page, "Live listings");
   await breathe(page, 5000, BEATS.landingProduct);
   await holdUntil(page, BEATS.landingProduct);
 
-  // 0:44–0:50 hover paid listing 9 + open cards (then cut to #how)
+  // 0:44–0:47 hover paid listing 9 + open cards
   await caption(page, "Live board");
   console.log("beat landing-board", voNow());
   await hoverText(page, "Already paid");
-  await sleep(page, 900);
+  await sleep(page, 600);
   const openCard = page.locator("a[href^='/pay/']").nth(1);
-  if ((await openCard.count()) > 0) {
-    await openCard.hover().catch(() => {});
-  } else {
-    await move(page, 1000, 360, 14);
-  }
-  await sleep(page, 700);
+  if ((await openCard.count()) > 0) await openCard.hover().catch(() => {});
+  else await move(page, 1000, 360, 14);
   await hoverText(page, "live listing");
   await holdUntil(page, BEATS.landingBoard);
 
-  // 0:50–1:20 #how four steps
+  // ~0:47 / video ~0:50 — #how four steps
   await caption(page, "Four steps");
   console.log("beat how", voNow());
-  await page.evaluate(() => document.getElementById("how")?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  await sleep(page, 900);
+  await page.evaluate(() => document.getElementById("how")?.scrollIntoView({ behavior: "instant", block: "start" }));
   await waitText(page, "Four steps");
   const stepNames = ["List", "Pay", "Prove", "Confirm"];
   for (const name of stepNames) {
-    if (remaining(BEATS.how) < 1200) break;
+    if (remaining(BEATS.how) < 1000) break;
     const step = page.locator("#how").getByRole("heading", { name, exact: true }).first();
     if ((await step.count()) > 0) await step.hover().catch(() => {});
     await sleep(page, Math.min(2200, Math.max(400, remaining(BEATS.how) / 5)));
   }
   await holdUntil(page, BEATS.how);
 
-  // 1:20–1:35 checker, not custodian
+  // checker — start marketplace fetch under this frame
   await caption(page, "A checker. Not a custodian.");
   console.log("beat checker", voNow());
   await page.evaluate(() => {
     const el = [...document.querySelectorAll("h2")].find((n) => /not a custodian/i.test(n.textContent || ""));
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    el?.scrollIntoView({ behavior: "instant", block: "start" });
   });
-  await sleep(page, 800);
   await hoverText(page, "Not a bridge");
-  await sleep(page, 700);
+  await sleep(page, 500);
   await hoverText(page, "Not escrow");
+  void rewarm(warmPage, BASE + "/pay", "usdc");
+  const marketId = await startFrame(page, BASE + "/pay");
   await holdUntil(page, BEATS.checker);
 
-  // 1:35–1:55 marketplace
+  // Marketplace onward loads in an offscreen iframe and swaps in when ready
   console.log("beat marketplace", voNow());
-  await gotoReady(page, BASE + "/pay", "Marketplace", "Marketplace");
-  await waitText(page, "USDC");
-  await sleep(page, 600);
-  await hoverText(page, "InvoicePaid listener");
-  await sleep(page, 800);
-  await smoothScroll(page, 280, 800);
-  await hoverText(page, "September retainer");
-  if (remaining(BEATS.marketplace) > 2500) {
-    await sleep(page, 700);
-    await smoothScroll(page, 520, 900);
-  }
-  await breathe(page, 3000, BEATS.marketplace);
+  let view = await revealFrame(page, marketId, "open", "Marketplace");
+  await hoverText(view, "InvoicePaid listener");
+  await sleep(page, 700);
+  await hoverText(view, "September retainer");
+  await breathe(page, 2800, BEATS.marketplace);
   await holdUntil(page, BEATS.marketplace);
 
-  // 1:55–2:20 create listing
   console.log("beat create", voNow());
-  await gotoReady(page, BASE + "/new", "Create a listing", "Create a listing");
-  await typeInto(page, "September retainer", "September research brief", 18, BEATS.create);
-  await typeInto(page, "250.00", "250", 36, BEATS.create);
-  await typeInto(page, "Delivery of the work", "Sealed brief, unlocked on payment", 14, BEATS.create);
+  view = await swapFrame(page, BASE + "/new", "Create a listing", "Create a listing");
+  await typeInto(view, "September retainer", "September research brief", 18, BEATS.create);
+  await typeInto(view, "250.00", "250", 36, BEATS.create);
+  await typeInto(view, "Delivery of the work", "Sealed brief, unlocked on payment", 14, BEATS.create);
   if (remaining(BEATS.create) > 2500) {
-    const workField = page.getByPlaceholder("Paste the deliverable or a link to it.");
+    const workField = view.getByPlaceholder("Paste the deliverable or a link to it.");
     await workField.click();
     await workField.pressSequentially("Delivery notes. Buyers only see this after isPaid is true.", {
       delay: remaining(BEATS.create) > 8000 ? 12 : 6,
     });
   }
   if (remaining(BEATS.create) > 1500) {
-    await typeInto(page, "0.01", "0.01", 32, BEATS.create);
-    await page.getByRole("button", { name: "7 days" }).click().catch(() => {});
+    await typeInto(view, "0.01", "0.01", 32, BEATS.create);
+    await view.getByRole("button", { name: "7 days" }).click().catch(() => {});
   }
-  if (remaining(BEATS.create) > 800) {
-    await hoverText(page, "Buyer preview");
-  }
+  if (remaining(BEATS.create) > 800) await hoverText(view, "Buyer preview");
+  void rewarm(warmPage, BASE + "/pay/1", "locked");
+  const unpaidId = await startFrame(page, BASE + "/pay/1");
   await holdUntil(page, BEATS.create);
 
-  // 2:20–2:40 unpaid checkout — rewarm paid listing in the background
   console.log("beat unpaid", voNow());
-  void rewarmPaid(warmPage);
-  await gotoReady(page, BASE + "/pay/1", "Locked. It unlocks here", "Unpaid checkout · listing 1");
-  await waitText(page, "250");
-  await sleep(page, 800);
-  await hoverText(page, "Amount");
-  await sleep(page, 600);
-  await hoverText(page, "Send to");
-  await smoothScroll(page, 280, 700);
-  await hoverText(page, "You receive");
-  if (remaining(BEATS.unpaid) > 2000) {
-    await scrollSelector(page, "text=Locked. It unlocks here");
-  }
-  await breathe(page, 3000, BEATS.unpaid);
+  void rewarm(warmPage, BASE + "/pay/9", "get the work");
+  view = await revealFrame(page, unpaidId, "Locked. It unlocks here", "Unpaid checkout · listing 1");
+  await hoverText(view, "Amount");
+  await sleep(page, 500);
+  await hoverText(view, "Send to");
+  await hoverText(view, "You receive");
+  const paidId = await startFrame(page, BASE + "/pay/9");
   await holdUntil(page, BEATS.unpaid);
 
-  // 2:40–3:05 paid listing 9 — wait for real work, not the skeleton
-  console.log("beat paid", voNow());
-  await page.goto(BASE + "/pay/9", { waitUntil: "domcontentloaded", timeout: 30000 });
-  await waitText(page, "Get the work", 30000);
-  await caption(page, "Paid · listing 9");
-  await waitText(page, "10.000247");
-  await sleep(page, 900);
-  await hoverText(page, "Amount");
-  await sleep(page, Math.min(2800, Math.max(600, remaining(BEATS.paid) / 3)));
-  const work = page.getByText("Get the work").first();
+  console.log("beat paid-preload", voNow());
+  view = await revealFrame(page, paidId, "Get the work", "Paid · listing 9");
+  console.log("beat paid-ready", voNow());
+  await holdUntil(page, 160_000);
+  await hoverText(view, "Amount");
+  await sleep(page, Math.min(2400, Math.max(400, remaining(BEATS.paid) / 3)));
+  const work = view.getByText("Get the work").first();
   await work.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
-  await sleep(page, 500);
   await work.hover().catch(() => {});
-  await breathe(page, 2500, BEATS.paid);
+  void rewarm(warmPage, BASE + "/receipt/9", "10.000247");
+  const receiptId = await startFrame(page, BASE + "/receipt/9");
+  const gate9Id = await startFrame(page, GATE_BASE + "/gate/9");
   await holdUntil(page, BEATS.paid);
 
-  // 3:05–3:16 receipt
   console.log("beat receipt", voNow());
-  await gotoReady(page, BASE + "/receipt/9", "10.000247", "Receipt · on-chain paid");
-  await sleep(page, 700);
-  await hoverText(page, "Ethereum transfer");
-  await sleep(page, 500);
-  await smoothScroll(page, 220, 600);
-  await hoverText(page, "Creditcoin stamp");
+  view = await revealFrame(page, receiptId, "10.000247", "Receipt · on-chain paid");
+  await hoverText(view, "Ethereum transfer");
+  await hoverText(view, "Creditcoin stamp");
+  void rewarm(warmPage, GATE_BASE + "/gate/1", "402");
+  const gate1Id = await startFrame(page, GATE_BASE + "/gate/1");
   await holdUntil(page, BEATS.receipt);
 
-  // 3:16–3:22 gate 200
   console.log("beat gate200", voNow());
-  await gotoReady(page, GATE_BASE + "/gate/9", "Access granted", "GET /api/gate/9  →  200");
-  await sleep(page, 400);
-  await smoothScroll(page, 180, 400);
+  view = await revealFrame(page, gate9Id, "Access granted", "GET /api/gate/9  →  200");
+  const docsId = await startFrame(page, BASE + "/docs");
   await holdUntil(page, BEATS.gate200);
 
-  // 3:22–3:26 gate 402
   console.log("beat gate402", voNow());
-  await gotoReady(page, GATE_BASE + "/gate/1", "402 Payment Required", "GET /api/gate/1  →  402");
+  view = await revealFrame(page, gate1Id, "402 Payment Required", "GET /api/gate/1  →  402");
   await holdUntil(page, BEATS.gate402);
 
-  // 3:26–end docs isPaid
   console.log("beat docs", voNow());
-  await gotoReady(page, BASE + "/docs", "Docs", "Other contracts call isPaid");
-  await page.evaluate(() => document.getElementById("ispai")?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  await sleep(page, 700);
+  view = await revealFrame(page, docsId, "isPaid", "Other contracts call isPaid");
+  await view.locator("#ispai").evaluate((el) => el.scrollIntoView({ behavior: "instant", block: "start" })).catch(() => {});
   await caption(page, "Remote proof. Local unlock.");
-  await hoverText(page, "isPaid");
+  await hoverText(view, "isPaid");
   await holdUntil(page, Math.max(BEATS.docs, voiceMs + 400));
 
   const video = page.video();
@@ -521,7 +528,7 @@ async function main() {
   if (!videoPath) throw new Error("Playwright did not write a video");
   console.log("video", videoPath);
 
-  mux(videoPath, AUDIO, OUT_MP4, TITLE_MS / 1000);
+  mux(videoPath, AUDIO, OUT_MP4, actualTitleMs / 1000);
   const destMs = audioDurationMs(OUT_MP4);
   console.log("mp4", OUT_MP4, destMs);
 }
