@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { NetworkPills } from "@/components/network-pills";
 import { OpenBoard } from "@/components/open-board";
+import { PaidExample } from "@/components/paid-example";
 import { ProductPreview } from "@/components/product-preview";
 import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
@@ -17,35 +18,36 @@ function Home() {
   return (
     <main>
       <section className="border-b border-line">
-        <div className="mx-auto grid max-w-6xl items-start gap-12 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:py-20">
-          <div>
+        <div className="mx-auto grid max-w-6xl items-start gap-8 px-4 py-7 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] lg:gap-12 lg:py-20">
+          <div className="min-w-0">
             <p className="kicker">Public marketplace · payment checker</p>
-            <h1 className="mt-5 font-display text-4xl leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.75rem]">
+            <h1 className="mt-3 font-display text-[1.75rem] leading-[1.12] tracking-tight sm:mt-5 sm:text-4xl lg:text-[3.75rem] lg:leading-[1.05]">
               List work.
               <span className="mt-1 block italic text-muted">Anyone can buy it.</span>
             </h1>
-            <p className="mt-6 max-w-lg text-base leading-relaxed text-muted">
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted sm:mt-6 sm:text-base">
               A public board of things for sale. Buyers send USDC on Ethereum. Attestcoin proves the
               transfer. A Creditcoin contract is the only thing that may say it is paid.
             </p>
-            <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Link to="/pay">
-                <Button size="lg" className="w-full sm:w-auto">
+            <div className="mt-5 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:items-center">
+              <Link to="/pay" className="w-full sm:w-auto">
+                <Button size="lg" className="h-12 w-full sm:w-auto">
                   Browse marketplace
                   <ArrowRight className="size-4" strokeWidth={1.75} />
                 </Button>
               </Link>
-              <Link to="/new">
-                <Button size="lg" variant="ghost" className="w-full sm:w-auto">
+              <Link to="/new" className="w-full sm:w-auto">
+                <Button size="lg" variant="ghost" className="h-12 w-full sm:w-auto">
                   Create a listing
                 </Button>
               </Link>
             </div>
-            <NetworkPills className="mt-8" />
-            <p className="mt-4 text-xs text-faint">Looking is free. Wallet only when you list or pay.</p>
+            <PaidExample />
+            <NetworkPills className="mt-5 sm:mt-8" />
+            <p className="mt-3 text-xs text-faint sm:mt-4">Looking is free. Wallet only when you list or pay.</p>
           </div>
-          <div>
-            <div className="flex items-center justify-between gap-3 px-1">
+          <div className="min-w-0">
+            <div className="flex items-center justify-between gap-3">
               <p className="kicker">Live listings</p>
               <Link to="/pay" className="text-xs text-muted hover:text-fg">
                 See all
@@ -59,16 +61,16 @@ function Home() {
       </section>
 
       <section id="how" className="scroll-mt-20 border-b border-line">
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
           <p className="kicker">How it works</p>
-          <h2 className="mt-3 max-w-2xl font-display text-3xl tracking-tight sm:text-5xl">
+          <h2 className="mt-3 max-w-2xl font-display text-xl tracking-tight sm:text-3xl lg:text-5xl">
             Four steps. Then it’s paid.
           </h2>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted">
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted sm:mt-4 sm:text-base">
             You do not need to operate two chains. List. Pay. The contract checks. Other apps ask
             isPaid.
           </p>
-          <ol className="mt-10 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="mt-8 grid gap-px overflow-hidden rounded-xl border border-line bg-line lg:mt-10 lg:grid-cols-4">
             {[
               ["01", "List", "Creditcoin", "Attach the work, the exact USDC price, and a small Creditcoin lock. The work stays sealed."],
               ["02", "Pay", "Ethereum", "A buyer sends that USDC from any wallet. Paidline never holds it."],
@@ -80,7 +82,7 @@ function Home() {
                   <span>{n}</span>
                   <span className="uppercase tracking-wide">{chain}</span>
                 </p>
-                <h3 className="mt-4 font-display text-2xl tracking-tight">{t}</h3>
+                <h3 className="mt-4 font-display text-xl tracking-tight sm:text-2xl">{t}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{d}</p>
               </li>
             ))}
@@ -89,19 +91,19 @@ function Home() {
       </section>
 
       <section className="scroll-mt-20 border-b border-line">
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
           <p className="kicker">What this is not</p>
-          <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
+          <h2 className="mt-3 font-display text-xl tracking-tight sm:text-3xl lg:text-4xl">
             A checker. Not a custodian.
           </h2>
-          <ul className="mt-10 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-3">
+          <ul className="mt-8 grid gap-px overflow-hidden rounded-xl border border-line bg-line lg:mt-10 lg:grid-cols-3">
             {[
               ["Not a bridge", "USDC never moves to Creditcoin. Only the fact of payment does."],
               ["Not escrow of the dollars", "The seller is paid on Ethereum. The lock is a receipt bond."],
               ["Not a private board", "Every funded listing is public. First matching payment claims it."],
             ].map(([t, d]) => (
-              <li key={t} className="bg-surface p-6">
-                <h3 className="font-display text-2xl tracking-tight">{t}</h3>
+              <li key={t} className="bg-surface p-5 sm:p-6">
+                <h3 className="font-display text-xl tracking-tight sm:text-2xl">{t}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{d}</p>
               </li>
             ))}
@@ -110,12 +112,12 @@ function Home() {
       </section>
 
       <section id="who" className="scroll-mt-20 border-b border-line">
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
           <p className="kicker">Who it’s for</p>
-          <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
+          <h2 className="mt-3 font-display text-xl tracking-tight sm:text-3xl lg:text-4xl">
             Sellers, buyers, agents, and other apps.
           </h2>
-          <ul className="mt-10 grid gap-4 sm:grid-cols-2">
+          <ul className="mt-8 grid gap-3 lg:mt-10 lg:grid-cols-2 lg:gap-4">
             <Audience
               title="Sellers"
               body="Put a retainer, a seat, or an API credit on the board. You do not pick the buyer. USDC lands in your wallet."
@@ -145,10 +147,10 @@ function Home() {
       </section>
 
       <section id="faq" className="scroll-mt-20 border-b border-line">
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
           <p className="kicker">Questions</p>
-          <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">If you’re new here</h2>
-          <dl className="mt-10 divide-y divide-line border-y border-line">
+          <h2 className="mt-3 font-display text-xl tracking-tight sm:text-3xl lg:text-4xl">If you’re new here</h2>
+          <dl className="mt-8 divide-y divide-line border-y border-line lg:mt-10">
             {[
               [
                 "Do I need a special wallet?",
@@ -167,7 +169,7 @@ function Home() {
                 "Buyers live on Ethereum. The listing and the “paid” flag live on Creditcoin. Paidline is the checker between them.",
               ],
             ].map(([q, a]) => (
-              <div key={q} className="grid gap-2 py-6 sm:grid-cols-[minmax(0,16rem)_1fr] sm:gap-8">
+              <div key={q} className="grid gap-2 py-5 lg:grid-cols-[minmax(0,16rem)_1fr] lg:gap-8 lg:py-6">
                 <dt className="font-medium">{q}</dt>
                 <dd className="text-sm leading-relaxed text-muted">{a}</dd>
               </div>
@@ -177,13 +179,13 @@ function Home() {
       </section>
 
       <section id="paid" className="scroll-mt-20 border-b border-line">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-10">
           <div>
             <p className="kicker">What confirmation looks like</p>
-            <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
+            <h2 className="mt-3 font-display text-xl tracking-tight sm:text-3xl lg:text-4xl">
               A receipt the contract stamped.
             </h2>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-muted">
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-muted sm:mt-4">
               After Attestcoin verifies the Sepolia transfer, Paidline marks the listing paid and
               releases the lock. Other contracts never talk to the prover. They call isPaid.
             </p>
@@ -198,10 +200,10 @@ function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
-        <div className="flex flex-col gap-6 overflow-hidden rounded-xl border border-line bg-surface px-6 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+        <div className="flex flex-col gap-5 overflow-hidden rounded-xl border border-line bg-surface px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-8">
           <div>
-            <h2 className="font-display text-3xl tracking-tight">Start with a listing.</h2>
+            <h2 className="font-display text-xl tracking-tight sm:text-3xl">Start with a listing.</h2>
             <p className="mt-2 max-w-md text-sm text-muted">
               Publish it. It appears on the marketplace. The first matching payment confirms it.
             </p>
@@ -239,8 +241,8 @@ function Audience({
   label: string;
 }) {
   return (
-    <li className="rounded-xl border border-line bg-surface p-6">
-      <h3 className="font-display text-2xl tracking-tight">{title}</h3>
+    <li className="rounded-xl border border-line bg-surface p-5 sm:p-6">
+      <h3 className="font-display text-xl tracking-tight sm:text-2xl">{title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
       <Link
         to={to}

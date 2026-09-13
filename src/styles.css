@@ -65,9 +65,13 @@ html.light {
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
     background: var(--color-bg);
     color: var(--color-fg);
     color-scheme: dark;
+    overflow-x: clip;
+    width: 100%;
   }
 
   body {
@@ -75,6 +79,16 @@ html.light {
     background: var(--color-bg);
     color: var(--color-fg);
     min-height: 100dvh;
+    overflow-x: clip;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
   }
 
   h1,

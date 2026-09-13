@@ -156,6 +156,24 @@ POST your URL
 
 Idempotent on invoiceId. Ignore if isPaid is still false (reorg / bad indexer). Do not treat the relayer as the signal — the log is.`,
   },
+  9: {
+    kind: "text",
+    body: `You paid. This is the work.
+
+Paidline listing for BUIDL CTC 2026 Fall judges.
+
+1. This brief was sealed when the listing was created. Unpaid checkout and GET /api/gate/9 returned 402 without this body.
+2. You sent exact USDC on Ethereum Sepolia. Paidline never held it.
+3. Attestcoin proved the transfer. submitPayment matched token, destination, and amount.
+4. isPaid(9) is true. Locked tCTC released to the paying wallet.
+5. The same URL now returns 200 with this payload.
+
+That is the product: remote proof, local unlock. No company in the middle confirmed it.
+
+Live contract: 0x4fB6aB16B3CEf1853DF4247b245E4de139108339
+Docs: https://paidline.vercel.app/docs
+Gate: https://paidline.vercel.app/api/gate/9`,
+  },
 };
 
 function seedWork(invoiceId: number): WorkPayload | null {

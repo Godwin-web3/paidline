@@ -60,18 +60,19 @@ export function OpenBoard({
               <Link
                 to="/pay/$id"
                 params={{ id: String(inv.id) }}
-                className="group flex items-start justify-between gap-4 rounded-xl border border-line bg-surface px-4 py-3.5 transition-colors hover:border-line-strong hover:bg-raised"
+                className="block rounded-xl border border-line bg-surface px-4 py-3.5 transition-colors hover:border-line-strong hover:bg-raised"
               >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{inv.title}</p>
-                  <p className="mt-1 truncate text-xs text-muted">{inv.releaseLabel}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-mono text-[11px] text-faint">#{inv.id}</p>
                   {inv.hasWork ? (
-                    <p className="mt-1 text-[11px] uppercase tracking-wide text-faint">Includes work</p>
+                    <p className="text-[11px] uppercase tracking-wide text-faint">Includes work</p>
                   ) : null}
                 </div>
-                <p className="shrink-0 font-display text-xl tabular-nums tracking-tight">
+                <p className="mt-1.5 text-[15px] font-medium leading-snug">{inv.title}</p>
+                <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted">{inv.releaseLabel}</p>
+                <p className="mt-3 font-display text-2xl tabular-nums tracking-tight">
                   {formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)}
-                  <span className="ml-1 text-xs text-muted">USDC</span>
+                  <span className="ml-1.5 font-sans text-xs font-normal text-muted">USDC</span>
                 </p>
               </Link>
             </li>

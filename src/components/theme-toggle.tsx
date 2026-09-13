@@ -12,7 +12,7 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={light ? "Switch to dark" : "Switch to light"}
       title={light ? "Dark" : "Light"}
-      className="inline-flex size-11 items-center justify-center rounded-md text-muted transition-colors duration-150 hover:bg-raised hover:text-fg"
+      className="inline-flex size-10 items-center justify-center rounded-md text-muted transition-colors duration-150 hover:bg-raised hover:text-fg sm:size-11"
     >
       {light ? <Moon className="size-4" strokeWidth={1.75} /> : <Sun className="size-4" strokeWidth={1.75} />}
     </button>

@@ -4,7 +4,7 @@
 
 A public marketplace with a payment checker. Listings live on Creditcoin. Buyers send USDC on Ethereum. Attestcoin proves the transfer. The contract is the only thing that may say it is paid.
 
-Live app: [paidline.vercel.app](https://paidline.vercel.app) · Marketplace: [paidline.vercel.app/pay](https://paidline.vercel.app/pay) · Demo: [paidline.vercel.app/demo](https://paidline.vercel.app/demo)
+Live app: [paidline.vercel.app](https://paidline.vercel.app) · Marketplace: [paidline.vercel.app/pay](https://paidline.vercel.app/pay) · Paid example: [paidline.vercel.app/pay/9](https://paidline.vercel.app/pay/9) · Demo: [paidline.vercel.app/demo](https://paidline.vercel.app/demo)
 
 Deck: [`docs/paidline-buidl-ctc-2026-fall.pdf`](docs/paidline-buidl-ctc-2026-fall.pdf) · Attestcoin write-up: [`docs/ATTESTCOIN.md`](docs/ATTESTCOIN.md)
 

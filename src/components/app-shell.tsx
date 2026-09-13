@@ -61,12 +61,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 function LandingBar() {
   return (
-    <header className="sticky top-0 z-30 border-b border-line/80 bg-bg/85 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-        <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 shrink-0 items-center">
+    <header className="sticky top-0 z-30 border-b border-line/80 bg-bg/85 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2 sm:gap-3 sm:px-6 sm:py-2.5">
+        <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 min-w-0 shrink items-center">
           <Wordmark compact />
         </Link>
-        <nav className="flex shrink-0 items-center gap-1">
+        <nav className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <Link
             to="/board"
             className="hidden min-h-11 items-center px-3 text-sm text-muted transition-colors duration-150 hover:text-fg sm:inline-flex"
@@ -86,8 +86,9 @@ function LandingBar() {
             Docs
           </Link>
           <Link to="/pay">
-            <span className="inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg transition-opacity duration-150 hover:opacity-90">
-              Open marketplace
+            <span className="inline-flex min-h-10 items-center rounded-md bg-accent px-3 text-xs font-medium text-accent-fg transition-opacity duration-150 hover:opacity-90 sm:min-h-11 sm:px-4 sm:text-sm">
+              <span className="sm:hidden">Board</span>
+              <span className="hidden sm:inline">Open marketplace</span>
             </span>
           </Link>
           <ThemeToggle />
@@ -112,13 +113,14 @@ function DocsBar() {
         <div className="flex shrink-0 items-center gap-1">
           <Link
             to="/board"
-            className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-fg"
+            className="hidden min-h-11 items-center px-3 text-sm text-muted hover:text-fg sm:inline-flex"
           >
             Marketplace
           </Link>
           <Link to="/pay">
-            <span className="inline-flex min-h-11 items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg">
-              Open marketplace
+            <span className="inline-flex min-h-10 items-center rounded-md bg-accent px-3 text-xs font-medium text-accent-fg sm:min-h-11 sm:px-4 sm:text-sm">
+              <span className="sm:hidden">Board</span>
+              <span className="hidden sm:inline">Open marketplace</span>
             </span>
           </Link>
           <ThemeToggle />
@@ -132,25 +134,19 @@ function TicketBar({ pathname }: { pathname: string }) {
   const receipt = pathname.startsWith("/receipt/");
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
-        <div className="flex items-center gap-3">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2 sm:gap-3 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Link to="/" aria-label="Paidline home" className="inline-flex min-h-11 items-center">
             <Mark className="size-7" />
           </Link>
-          <p className="text-sm text-muted">{receipt ? "Receipt" : "Checkout"}</p>
+          <p className="truncate text-sm text-muted">{receipt ? "Receipt" : "Checkout"}</p>
         </div>
-        <div className="flex items-center gap-1">
-          <Link
-            to="/board"
-            className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-fg"
-          >
-            Marketplace
-          </Link>
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
           <Link
             to="/pay"
-            className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-fg"
+            className="inline-flex min-h-11 items-center px-2 text-sm text-muted hover:text-fg sm:px-3"
           >
-            All listings
+            Listings
           </Link>
           <ThemeToggle />
         </div>
