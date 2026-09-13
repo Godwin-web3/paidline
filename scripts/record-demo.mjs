@@ -2,15 +2,15 @@
 /**
  * Timed browser walkthrough of the live Paidline app.
  *
- * Scenes are locked to absolute voiceover timestamps (VO t=0 after the title
- * card), not proportional weights. Slow RPC pages are covered with the previous
- * frame until real copy is on screen — never hold a skeleton as the shot.
+ * Beats are Whisper-locked to public/demo.mp3 (208.056s). Times are VO-relative
+ * after a silent TITLE_MS title card. The landing is a real walk (scroll/hover)
+ * and #how / /pay / /new must not appear while VO is still on problem/product/board.
  *
  *   DEMO_BASE=https://paidline.vercel.app node scripts/record-demo.mjs
  */
 import { chromium } from "playwright";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, existsSync, copyFileSync } from "node:fs";
+import { mkdirSync, existsSync, copyFileSync, appendFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -20,31 +20,28 @@ const GATE_BASE = process.env.DEMO_GATE_BASE ?? "https://paidline.vercel.app";
 const AUDIO = process.env.DEMO_AUDIO ?? join(ROOT, "public/demo.mp3");
 const OUT_DIR = process.env.DEMO_OUT_DIR ?? "/tmp/paidline-demo-rec";
 const OUT_MP4 = process.env.DEMO_MP4 ?? join(ROOT, "public/demo.mp4");
+const SCENE_LOG = join(OUT_DIR, "scene.jsonl");
 
 /** Silent title card, then VO begins. Times below are relative to VO start. */
 const TITLE_MS = 3000;
 
 /**
- * Absolute VO windows (ms). `until` is when the next topic must be on screen.
- *
- * Visuals lead the VO on purpose: hero is only a few seconds, then we scroll
- * the landing and cut to #how well before the “four steps” line (~47–66s).
- * Video timeline = TITLE_MS + VO, so #how lands ~27s into the file.
+ * Absolute VO windows (ms). `until` is when the NEXT topic must already be
+ * on screen. Arrive 0.5–1s early is OK; late is not.
  */
 const BEATS = {
-  landingProblem: 8_000,
-  landingProduct: 16_000,
-  landingBoard: 24_000,
-  how: 68_000,
-  checker: 80_000,
-  marketplace: 100_000,
-  create: 124_000,
-  unpaid: 142_000,
-  paid: 168_000,
-  receipt: 180_000,
-  gate200: 192_000,
-  gate402: 201_000,
-  docs: 211_000,
+  landingProblem: 23_680,
+  landingProduct: 46_320,
+  landingBoard: 64_000,
+  how: 77_680,
+  marketplace: 97_600,
+  create: 119_760,
+  unpaid: 136_640,
+  paid: 162_720,
+  receipt: 176_800,
+  gate200: 185_440,
+  gate402: 197_840,
+  docs: 208_056,
 };
 
 let voZero = 0;
@@ -88,8 +85,25 @@ function sleep(page, ms) {
   return page.waitForTimeout(ms);
 }
 
+function logScene(event, extra = {}) {
+  const row = { t: voNow(), event, ...extra };
+  console.log("scene", JSON.stringify(row));
+  try {
+    appendFileSync(SCENE_LOG, JSON.stringify(row) + "\n");
+  } catch {
+    /* ignore */
+  }
+}
+
 async function holdUntil(page, untilVoMs) {
   const remain = remaining(untilVoMs);
+  if (remain > 40) await sleep(page, remain);
+}
+
+/** Wait until `beatMs - earlyMs` so the next cut can land ~0.5–1s early. */
+async function waitToArrive(page, beatMs, earlyMs = 800) {
+  const target = beatMs - earlyMs;
+  const remain = remaining(target);
   if (remain > 40) await sleep(page, remain);
 }
 
@@ -118,6 +132,7 @@ async function caption(page, text) {
       ].join(";");
       document.body.appendChild(el);
     }
+    el.dataset.scene = t;
     el.textContent = t;
   }, text);
 }
@@ -160,8 +175,17 @@ async function jumpY(page, y) {
   }, y);
 }
 
+async function jumpId(page, id, block = "start") {
+  await page.evaluate(
+    ({ id, block }) => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "instant", block });
+    },
+    { id, block },
+  );
+}
+
 async function smoothScroll(page, y, ms) {
-  const budget = Math.max(80, Math.min(ms, 3200));
+  const budget = Math.max(80, Math.min(ms, 4200));
   await page.evaluate(
     async ({ y, ms }) => {
       const start = window.scrollY;
@@ -194,6 +218,36 @@ async function waitText(page, needle, timeout = 25000) {
   );
 }
 
+async function landingMetrics(page) {
+  return page.evaluate(() => {
+    const how = document.getElementById("how");
+    const howTop = how?.offsetTop ?? 99999;
+    const maxScroll = Math.max(0, howTop - window.innerHeight - 32);
+    const rect = how?.getBoundingClientRect();
+    const howVisible = Boolean(
+      rect && rect.top < window.innerHeight - 48 && rect.bottom > 72,
+    );
+    const h = document.querySelector("h1, h2");
+    return {
+      howTop,
+      maxScroll,
+      howVisible,
+      scrollY: window.scrollY,
+      heading: (h?.innerText || "").replace(/\s+/g, " ").trim().slice(0, 80),
+    };
+  });
+}
+
+/** Snap back to the hero if #how accidentally entered the viewport. */
+async function keepHowOffscreen(page, label) {
+  const m = await landingMetrics(page);
+  if (m.howVisible) {
+    logScene("how-peek-blocked", { label, ...m });
+    await jumpY(page, 0);
+  }
+  return m;
+}
+
 let swapSeq = 0;
 
 async function startFrame(page, url) {
@@ -210,6 +264,7 @@ async function startFrame(page, url) {
     },
     { href: url, id },
   );
+  logScene("frame-start", { id, url });
   return id;
 }
 
@@ -229,28 +284,51 @@ async function revealFrame(page, id, needle, captionText) {
     if (f) f.dataset.shown = "1";
   }, id);
   if (captionText) await caption(page, captionText);
+  logScene("frame-reveal", { id, needle, caption: captionText, vo: voNow() });
   return frame;
 }
 
-async function swapFrame(page, url, needle, captionText) {
-  const id = await startFrame(page, url);
-  return revealFrame(page, id, needle, captionText);
-}
-
-async function hoverText(page, text) {
-  const loc = page.getByText(text, { exact: false }).first();
-  if ((await loc.count()) === 0) return;
-  const box = await loc.boundingBox().catch(() => null);
-  if (box) {
-    await move(page, box.x + box.width * 0.45, box.y + box.height * 0.55, 12);
+async function revealByBeat(page, id, needle, captionText, beatMs) {
+  const frame = page.frameLocator(`#${id}`);
+  await frame.getByText(needle, { exact: false }).first().waitFor({ state: "visible", timeout: 35000 });
+  await waitToArrive(page, beatMs, 800);
+  if (voNow() > beatMs + 400) {
+    logScene("LATE-REVEAL", { id, needle, vo: voNow(), beatMs });
   }
-  await loc.hover({ timeout: 2500 }).catch(() => {});
+  return revealFrame(page, id, needle, captionText);
 }
 
 async function move(_target, x, y, steps = 16) {
   const host = filmPage ?? _target;
   if (!host?.mouse) return;
   await host.mouse.move(x, y, { steps });
+}
+
+/**
+ * Point the filmed cursor at visible copy. `mayScroll` is off on the landing
+ * so Playwright hover cannot drag #how into view (PR #4 failure mode).
+ */
+async function hoverText(root, text, { mayScroll = false } = {}) {
+  const loc = root.getByText(text, { exact: false }).first();
+  if ((await loc.count()) === 0) return false;
+  if (mayScroll) {
+    await loc.scrollIntoViewIfNeeded({ timeout: 2500 }).catch(() => {});
+  }
+  const box = await loc.boundingBox().catch(() => null);
+  if (!box || box.width < 2 || box.height < 2) return false;
+  if (box.y > 720 || box.y + box.height < 0) return false;
+  await move(filmPage, box.x + Math.min(box.width * 0.45, 180), box.y + box.height * 0.55, 14);
+  if (mayScroll) await loc.hover({ timeout: 1500 }).catch(() => {});
+  return true;
+}
+
+async function hoverHref(page, href) {
+  const loc = page.locator(`a[href="${href}"]`).first();
+  if ((await loc.count()) === 0) return false;
+  const box = await loc.boundingBox().catch(() => null);
+  if (!box || box.y > 700 || box.y + box.height < 8) return false;
+  await move(page, box.x + Math.min(box.width * 0.42, 160), box.y + Math.min(40, box.height * 0.45), 16);
+  return true;
 }
 
 async function breathe(page, ms, untilVoMs) {
@@ -260,11 +338,11 @@ async function breathe(page, ms, untilVoMs) {
   let toggle = 0;
   while (Date.now() - t0 < cap - 60) {
     const left = cap - (Date.now() - t0);
-    const x = 360 + (toggle % 3) * 160;
-    const y = 240 + (toggle % 2) * 90;
-    await page.mouse.move(x, y, { steps: 10 });
+    const x = 300 + (toggle % 4) * 140;
+    const y = 200 + (toggle % 3) * 80;
+    await page.mouse.move(x, y, { steps: 12 });
     toggle += 1;
-    await sleep(page, Math.min(700, left));
+    await sleep(page, Math.min(640, left));
   }
 }
 
@@ -285,8 +363,8 @@ async function warmup(context) {
   const p = await context.newPage();
   p.setDefaultTimeout(20000);
   const targets = [
-    [BASE + "/", "list work"],
-    [BASE + "/pay", "usdc"],
+    [BASE + "/", "already paid"],
+    [BASE + "/pay", "open"],
     [BASE + "/pay/1", "locked"],
     [BASE + "/new", "create a listing"],
     [BASE + "/docs", "ispai"],
@@ -294,7 +372,7 @@ async function warmup(context) {
     [GATE_BASE + "/gate/9", "access granted"],
     [GATE_BASE + "/gate/1", "402"],
     [BASE + "/pay/9", "get the work"],
-    [BASE + "/", "already paid"],
+    [BASE + "/", "live listing"],
   ];
   for (const [url, needle] of targets) {
     try {
@@ -322,10 +400,11 @@ async function rewarm(warmPage, url, needle) {
   }
 }
 
-function mux(webmPath, audioPath, destPath, delaySec) {
+function mux(webmPath, audioPath, destPath, delaySec, trimSec = 0) {
   const staged = destPath + ".partial.mp4";
   const args = [
     "-y",
+    ...(trimSec > 0.05 ? ["-ss", trimSec.toFixed(3)] : []),
     "-i",
     webmPath,
     "-itsoffset",
@@ -375,11 +454,169 @@ function mux(webmPath, audioPath, destPath, delaySec) {
   spawnSync("rm", ["-f", staged]);
 }
 
+async function walkLandingHero(page) {
+  // VO 0–8s: headline + CTAs. Do not leave the hero.
+  await caption(page, "The problem");
+  logScene("landing-hero", await keepHowOffscreen(page, "hero-start"));
+  await jumpY(page, 0);
+  await move(page, 280, 170, 18);
+  await hoverText(page, "List work");
+  await sleep(page, 280);
+  await hoverText(page, "Anyone can buy it");
+  await sleep(page, 240);
+  await hoverText(page, "Browse marketplace");
+  await sleep(page, 320);
+  await hoverText(page, "Create a listing");
+  await sleep(page, 240);
+  await hoverText(page, "public board of things for sale");
+  await keepHowOffscreen(page, "hero-ctas");
+  await breathe(page, 700, 8_000);
+  await holdUntil(page, 8_000);
+
+  // VO 8–23.68s: slow walk through problem/value copy. Hero is ~one viewport;
+  // only a few dozen px of scroll are safe before #how. Cursor does the walk.
+  logScene("landing-problem-scroll", await landingMetrics(page));
+  const { maxScroll } = await landingMetrics(page);
+  const problemScroll = Math.max(0, Math.min(maxScroll, 40));
+  const scrollMs = Math.min(3800, Math.max(900, remaining(BEATS.landingProblem) - 10_000));
+  await smoothScroll(page, problemScroll, scrollMs);
+  await keepHowOffscreen(page, "after-problem-scroll");
+  await hoverText(page, "A public board");
+  await sleep(page, 360);
+  await hoverText(page, "Buyers send USDC");
+  await sleep(page, 280);
+  await hoverText(page, "Already paid");
+  await hoverHref(page, "/pay/9");
+  await sleep(page, 300);
+  await hoverText(page, "Looking is free");
+  await keepHowOffscreen(page, "problem-copy");
+  if (remaining(BEATS.landingProblem) > 1800) {
+    await hoverText(page, "Browse marketplace");
+    await hoverText(page, "Create a listing");
+  }
+  await breathe(page, 900, BEATS.landingProblem);
+  await keepHowOffscreen(page, "problem-hold");
+  await holdUntil(page, BEATS.landingProblem);
+}
+
+async function walkLandingProduct(page) {
+  // VO 23.68–40s: product nouns on the hero, then #paid claims (instant jump —
+  // a smooth scroll would drag #how across the frame).
+  await caption(page, "What Paidline is");
+  logScene("landing-product", await keepHowOffscreen(page, "product-start"));
+  await jumpY(page, 0);
+  await hoverText(page, "Attestcoin proves");
+  await sleep(page, 360);
+  await hoverText(page, "Creditcoin contract");
+  await sleep(page, 280);
+  await hoverText(page, "Creditcoin CC3");
+  await sleep(page, 240);
+  await hoverText(page, "USDC on Ethereum");
+  await keepHowOffscreen(page, "hero-badges");
+  await breathe(page, 1600, 32_000);
+  if (remaining(32_000) > 200) await holdUntil(page, 32_000);
+
+  // Instant jump to the confirmation / Attestcoin section — #how stays offscreen.
+  await caption(page, "Attestcoin · Creditcoin");
+  await jumpId(page, "paid");
+  await sleep(page, 200);
+  logScene("landing-paid-section", await keepHowOffscreen(page, "paid-section"));
+  await hoverText(page, "Attestcoin verifies");
+  await sleep(page, 360);
+  await hoverText(page, "Creditcoin");
+  await sleep(page, 280);
+  await hoverText(page, "They call isPaid");
+  await hoverText(page, "Unlocked on checkout");
+  await keepHowOffscreen(page, "paid-claims");
+  await breathe(page, 800, 40_000);
+  await holdUntil(page, 40_000);
+
+  // VO ~40–45s: board must be in view BEFORE 46.3 (“This is the live board”).
+  await caption(page, "Live board");
+  await jumpY(page, 0);
+  await sleep(page, 180);
+  logScene("landing-board-early", await keepHowOffscreen(page, "board-early"));
+  await hoverText(page, "Live listings");
+  await hoverHref(page, "/pay/8");
+  await keepHowOffscreen(page, "board-pre");
+  await breathe(page, 2000, BEATS.landingProduct);
+  await holdUntil(page, BEATS.landingProduct);
+}
+
+async function walkLandingBoard(page) {
+  // VO 46.32–64s: listing 9 (paid) + open cards on the right. Stay off #how.
+  await caption(page, "Live board");
+  logScene("landing-board", await keepHowOffscreen(page, "board-start"));
+  await jumpY(page, 0);
+  await hoverText(page, "Live listings");
+  await sleep(page, 280);
+  await hoverHref(page, "/pay/9");
+  await hoverText(page, "Already paid");
+  await sleep(page, 400);
+  await hoverText(page, "Judge walkthrough");
+  await sleep(page, 300);
+
+  const openHrefs = ["/pay/8", "/pay/7", "/pay/6", "/pay/5"];
+  for (const href of openHrefs) {
+    if (remaining(62_000) < 900) break;
+    const ok = await hoverHref(page, href);
+    if (ok) await sleep(page, 700);
+  }
+  if (remaining(62_000) > 800) {
+    await hoverText(page, "live listing");
+  }
+  await keepHowOffscreen(page, "board-cards");
+  await breathe(page, 700, 63_200);
+  await holdUntil(page, 63_200);
+}
+
+async function walkHow(page) {
+  // Exactly ~64s — first time #how is allowed on screen.
+  await caption(page, "Four steps");
+  await waitToArrive(page, BEATS.landingBoard, 700);
+  await jumpId(page, "how");
+  await waitText(page, "Four steps", 8000);
+  logScene("how", { vo: voNow(), ...(await landingMetrics(page)) });
+
+  const hoverHowStep = async (name) => {
+    const step = page.locator("#how").getByRole("heading", { name, exact: true }).first();
+    if ((await step.count()) === 0) return;
+    const box = await step.boundingBox().catch(() => null);
+    if (box) await move(page, box.x + 40, box.y + 16, 12);
+  };
+
+  // Whisper silences in this window land near List / Pay / Prove / Confirm.
+  const steps = [
+    ["List", 67_200],
+    ["Pay", 70_300],
+    ["Prove", 73_100],
+    ["Confirm", 75_200],
+  ];
+  for (const [name, until] of steps) {
+    if (remaining(until) < 80) continue;
+    await page.evaluate(() => document.getElementById("how")?.scrollIntoView({ behavior: "instant", block: "start" }));
+    await hoverHowStep(name);
+    await sleep(page, Math.min(remaining(until) - 60, 2600));
+    await holdUntil(page, until);
+  }
+
+  await caption(page, "A checker. Not a custodian.");
+  await page.evaluate(() => {
+    const el = [...document.querySelectorAll("h2")].find((n) => /not a custodian/i.test(n.textContent || ""));
+    el?.scrollIntoView({ behavior: "instant", block: "start" });
+  });
+  await hoverText(page, "Not a bridge", { mayScroll: true });
+  await sleep(page, 280);
+  await hoverText(page, "Not escrow", { mayScroll: true });
+  logScene("checker", { vo: voNow() });
+}
+
 async function main() {
   if (!existsSync(AUDIO)) {
     throw new Error(`Narration missing: ${AUDIO}`);
   }
   mkdirSync(OUT_DIR, { recursive: true });
+  writeFileSync(SCENE_LOG, "");
   const voiceMs = audioDurationMs(AUDIO);
   console.log("voiceover_ms", voiceMs);
   console.log("title_ms", TITLE_MS);
@@ -423,116 +660,54 @@ async function main() {
   filmPage = page;
   page.setDefaultTimeout(25000);
   page.setDefaultNavigationTimeout(30000);
+  const recStart = Date.now();
 
   await page.goto(BASE + "/", { waitUntil: "domcontentloaded", timeout: 30000 });
   await waitText(page, "List work", 15000);
+  // Wait for the board under the not-yet-shown title, then paint the card.
+  // That wait is trimmed from the mp4 (trimSec) so TITLE_MS stays 3s and
+  // VO does not start over a skeleton board.
+  await waitText(page, "#9", 20000).catch(() => {});
   await page.evaluate(paintTitleOverlay);
+  const titleAt = Date.now();
   await sleep(page, TITLE_MS);
   await page.evaluate(() => document.getElementById("pl-title")?.remove());
   await injectCursor(page);
-  const actualTitleMs = TITLE_MS;
   voZero = Date.now();
-  console.log("vo_zero", { actualTitleMs });
+  const trimSec = Math.max(0, (titleAt - recStart) / 1000);
+  const actualTitleMs = voZero - titleAt;
+  logScene("vo-zero", { actualTitleMs, trimSec, recLeadMs: titleAt - recStart });
 
-  // VO 0–8s / video ~3–11s — hero only, pointer + CTAs (never a freeze)
-  await caption(page, "The problem");
-  console.log("beat landing-problem", voNow());
-  await waitText(page, "Already paid", 2500).catch(() => {});
-  await move(page, 260, 190, 16);
-  await hoverText(page, "Browse marketplace");
-  await sleep(page, 280);
-  await hoverText(page, "Create a listing");
-  await move(page, 420, 300, 14);
-  await hoverText(page, "Already paid");
-  await breathe(page, 900, BEATS.landingProblem);
-  await holdUntil(page, BEATS.landingProblem);
+  await walkLandingHero(page);
+  await walkLandingProduct(page);
+  await walkLandingBoard(page);
 
-  // VO 8–16s / video ~11–19s — still landing, scroll + value props (clear jump ~15s)
-  await caption(page, "What Paidline is");
-  console.log("beat landing-product", voNow());
-  await hoverText(page, "Anyone can buy it");
-  await smoothScroll(page, 260, 1200);
-  await move(page, 520, 400, 12);
-  await page.evaluate(() => document.getElementById("how")?.scrollIntoView({ behavior: "instant", block: "start" }));
-  await hoverText(page, "How it works");
-  await move(page, 300, 280, 10);
-  await hoverText(page, "Four steps. Then");
-  await breathe(page, 800, BEATS.landingProduct);
-  await holdUntil(page, BEATS.landingProduct);
-
-  // VO 16–24s — board highlight, then leave the landing
-  await caption(page, "Live board");
-  console.log("beat landing-board", voNow());
-  await jumpY(page, 80);
-  await hoverText(page, "Live listings");
-  await sleep(page, 280);
-  await hoverText(page, "Already paid");
-  const openCard = page.locator("a[href^='/pay/']").nth(1);
-  if ((await openCard.count()) > 0) {
-    const box = await openCard.boundingBox().catch(() => null);
-    if (box) await move(page, box.x + 80, box.y + 36, 14);
-    await openCard.hover().catch(() => {});
-  } else {
-    await move(page, 1020, 340, 14);
-  }
-  await breathe(page, 700, BEATS.landingBoard);
-  await holdUntil(page, BEATS.landingBoard);
-
-  // VO ~24s / video ~27s — #how. Stay here through the four-steps paragraph.
-  await caption(page, "Four steps");
-  console.log("beat how", voNow());
-  await page.evaluate(() => document.getElementById("how")?.scrollIntoView({ behavior: "instant", block: "start" }));
-  await waitText(page, "Four steps");
-  const stepNames = ["List", "Pay", "Prove", "Confirm"];
-  const hoverHowStep = async (name) => {
-    const step = page.locator("#how").getByRole("heading", { name, exact: true }).first();
-    if ((await step.count()) === 0) return;
-    const box = await step.boundingBox().catch(() => null);
-    if (box) await move(page, box.x + 40, box.y + 16, 12);
-    await step.hover().catch(() => {});
-  };
-  // Keep #how pinned. Do not hover page-global "isPaid" — that string also
-  // lives on a landing card and Playwright will scroll it back into view.
-  while (remaining(BEATS.how) > 1400) {
-    await page.evaluate(() => document.getElementById("how")?.scrollIntoView({ behavior: "instant", block: "start" }));
-    for (const name of stepNames) {
-      if (remaining(BEATS.how) < 1400) break;
-      await hoverHowStep(name);
-      await sleep(page, Math.min(2400, Math.max(400, remaining(BEATS.how) / 6)));
-    }
-    const ask = page.locator("#how").getByText("Other apps ask").first();
-    if ((await ask.count()) > 0) await ask.hover().catch(() => {});
-  }
-  await holdUntil(page, BEATS.how);
-
-  // checker — start marketplace fetch under this frame
-  await caption(page, "A checker. Not a custodian.");
-  console.log("beat checker", voNow());
-  await page.evaluate(() => {
-    const el = [...document.querySelectorAll("h2")].find((n) => /not a custodian/i.test(n.textContent || ""));
-    el?.scrollIntoView({ behavior: "instant", block: "start" });
-  });
-  await hoverText(page, "Not a bridge");
-  await sleep(page, 500);
-  await hoverText(page, "Not escrow");
-  void rewarm(warmPage, BASE + "/pay", "usdc");
+  // #how at ~64s — never earlier. Preload /pay under a hidden iframe so the
+  // marketplace cut is on time (listings need a couple of seconds after header).
+  void rewarm(warmPage, BASE + "/pay", "open");
   const marketId = await startFrame(page, BASE + "/pay");
-  await holdUntil(page, BEATS.checker);
+  await walkHow(page);
+  await holdUntil(page, BEATS.how - 800);
 
-  // Marketplace onward loads in an offscreen iframe and swaps in when ready
-  console.log("beat marketplace", voNow());
-  let view = await revealFrame(page, marketId, "open", "Marketplace");
-  await hoverText(view, "InvoicePaid listener");
-  await sleep(page, 700);
-  await hoverText(view, "September retainer");
-  await breathe(page, 2800, BEATS.marketplace);
-  await holdUntil(page, BEATS.marketplace);
+  let view = await revealByBeat(page, marketId, "open", "Marketplace", BEATS.how);
+  logScene("marketplace", { vo: voNow() });
+  await hoverText(view, "Marketplace", { mayScroll: true });
+  await sleep(page, 400);
+  await hoverText(view, "open", { mayScroll: true });
+  await sleep(page, 500);
+  await hoverText(view, "InvoicePaid listener", { mayScroll: true });
+  await sleep(page, 500);
+  await hoverText(view, "September retainer", { mayScroll: true });
+  void rewarm(warmPage, BASE + "/new", "create a listing");
+  const createId = await startFrame(page, BASE + "/new");
+  await breathe(page, 2400, BEATS.marketplace);
+  await holdUntil(page, BEATS.marketplace - 800);
 
-  console.log("beat create", voNow());
-  view = await swapFrame(page, BASE + "/new", "Create a listing", "Create a listing");
-  await typeInto(view, "September retainer", "September research brief", 18, BEATS.create);
-  await typeInto(view, "250.00", "250", 36, BEATS.create);
-  await typeInto(view, "Delivery of the work", "Sealed brief, unlocked on payment", 14, BEATS.create);
+  view = await revealByBeat(page, createId, "Create a listing", "Create a listing", BEATS.marketplace);
+  logScene("create", { vo: voNow() });
+  await typeInto(view, "September retainer", "September research brief", 18, 106_000);
+  await typeInto(view, "250.00", "250", 36, 108_200);
+  await typeInto(view, "Delivery of the work", "Sealed brief, unlocked on payment", 14, 111_400);
   if (remaining(BEATS.create) > 2500) {
     const workField = view.getByPlaceholder("Paste the deliverable or a link to it.");
     await workField.click();
@@ -544,58 +719,72 @@ async function main() {
     await typeInto(view, "0.01", "0.01", 32, BEATS.create);
     await view.getByRole("button", { name: "7 days" }).click().catch(() => {});
   }
-  if (remaining(BEATS.create) > 800) await hoverText(view, "Buyer preview");
+  if (remaining(BEATS.create) > 800) await hoverText(view, "Buyer preview", { mayScroll: true });
+  // /pay/9 is the slow RPC page — start it during publish, not after unpaid.
+  void rewarm(warmPage, BASE + "/pay/9", "get the work");
+  const paidId = await startFrame(page, BASE + "/pay/9");
   void rewarm(warmPage, BASE + "/pay/1", "locked");
   const unpaidId = await startFrame(page, BASE + "/pay/1");
-  await holdUntil(page, BEATS.create);
+  await holdUntil(page, BEATS.create - 800);
 
-  console.log("beat unpaid", voNow());
-  void rewarm(warmPage, BASE + "/pay/9", "get the work");
-  view = await revealFrame(page, unpaidId, "Locked. It unlocks here", "Unpaid checkout · listing 1");
-  await hoverText(view, "Amount");
-  await sleep(page, 500);
-  await hoverText(view, "Send to");
-  await hoverText(view, "You receive");
-  const paidId = await startFrame(page, BASE + "/pay/9");
-  await holdUntil(page, BEATS.unpaid);
+  view = await revealByBeat(page, unpaidId, "Locked. It unlocks here", "Unpaid checkout · listing 1", BEATS.create);
+  logScene("unpaid", { vo: voNow() });
+  await hoverText(view, "Amount", { mayScroll: true });
+  await sleep(page, 400);
+  await hoverText(view, "Send to", { mayScroll: true });
+  await hoverText(view, "You receive", { mayScroll: true });
+  await hoverText(view, "Locked", { mayScroll: true });
+  await holdUntil(page, BEATS.unpaid - 800);
 
-  console.log("beat paid-preload", voNow());
-  view = await revealFrame(page, paidId, "Get the work", "Paid · listing 9");
-  console.log("beat paid-ready", voNow());
-  await holdUntil(page, 154_000);
-  await hoverText(view, "Amount");
-  await sleep(page, Math.min(1800, Math.max(400, remaining(BEATS.paid) / 3)));
-  const work = view.getByText("Get the work").first();
-  await work.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
-  await work.hover().catch(() => {});
+  view = await revealByBeat(page, paidId, "Get the work", "Paid · listing 9", BEATS.unpaid);
+  logScene("paid", { vo: voNow() });
+  // Receipt + gate/9 are slow RPC pages — start them immediately, not after
+  // the work scroll, or the receipt cut lands late (first tape: +2.3s).
   void rewarm(warmPage, BASE + "/receipt/9", "10.000247");
   const receiptId = await startFrame(page, BASE + "/receipt/9");
   const gate9Id = await startFrame(page, GATE_BASE + "/gate/9");
-  await holdUntil(page, BEATS.paid);
+  await hoverText(view, "Amount", { mayScroll: true });
+  await sleep(page, 500);
+  await hoverText(view, "Listing #9", { mayScroll: true });
+  // Brief / Get the work must be visible by VO ~159s.
+  await holdUntil(page, 154_000);
+  const work = view.getByText("Get the work").first();
+  await work.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
+  await work.hover().catch(() => {});
+  await hoverText(view, "Get the work", { mayScroll: true });
+  logScene("paid-work-visible", { vo: voNow() });
+  await holdUntil(page, BEATS.paid - 800);
 
-  console.log("beat receipt", voNow());
-  view = await revealFrame(page, receiptId, "10.000247", "Receipt · on-chain paid");
-  await hoverText(view, "Ethereum transfer");
-  await hoverText(view, "Creditcoin stamp");
+  view = await revealByBeat(page, receiptId, "10.000247", "Receipt · on-chain paid", BEATS.paid);
+  logScene("receipt", { vo: voNow() });
+  await hoverText(view, "Ethereum transfer", { mayScroll: true });
+  await hoverText(view, "Creditcoin stamp", { mayScroll: true });
   void rewarm(warmPage, GATE_BASE + "/gate/1", "402");
   const gate1Id = await startFrame(page, GATE_BASE + "/gate/1");
-  await holdUntil(page, BEATS.receipt);
+  await holdUntil(page, BEATS.receipt - 800);
 
-  console.log("beat gate200", voNow());
-  view = await revealFrame(page, gate9Id, "Access granted", "GET /api/gate/9  →  200");
+  view = await revealByBeat(page, gate9Id, "Access granted", "GET /api/gate/9  →  200", BEATS.receipt);
+  logScene("gate200", { vo: voNow() });
   const docsId = await startFrame(page, BASE + "/docs");
-  await holdUntil(page, BEATS.gate200);
+  await holdUntil(page, BEATS.gate200 - 800);
 
-  console.log("beat gate402", voNow());
-  view = await revealFrame(page, gate1Id, "402 Payment Required", "GET /api/gate/1  →  402");
-  await holdUntil(page, BEATS.gate402);
+  view = await revealByBeat(page, gate1Id, "402 Payment Required", "GET /api/gate/1  →  402", BEATS.gate200);
+  logScene("gate402", { vo: voNow() });
+  await holdUntil(page, BEATS.gate402 - 800);
 
-  console.log("beat docs", voNow());
-  view = await revealFrame(page, docsId, "isPaid", "Other contracts call isPaid");
-  await view.locator("#ispai").evaluate((el) => el.scrollIntoView({ behavior: "instant", block: "start" })).catch(() => {});
+  view = await revealByBeat(page, docsId, "isPaid", "Other contracts call isPaid", BEATS.gate402);
+  logScene("docs", { vo: voNow() });
+  await view
+    .locator("#ispai")
+    .evaluate((el) => el.scrollIntoView({ behavior: "instant", block: "start" }))
+    .catch(() => {});
   await caption(page, "Remote proof. Local unlock.");
-  await hoverText(view, "isPaid");
+  await hoverText(view, "isPaid", { mayScroll: true });
+  if (remaining(Math.max(BEATS.docs, voiceMs)) > 1200) {
+    await hoverText(view, "Paidline", { mayScroll: true });
+  }
   await holdUntil(page, Math.max(BEATS.docs, voiceMs + 400));
+  logScene("end", { vo: voNow() });
 
   const video = page.video();
   await page.close();
@@ -606,9 +795,9 @@ async function main() {
   if (!videoPath) throw new Error("Playwright did not write a video");
   console.log("video", videoPath);
 
-  mux(videoPath, AUDIO, OUT_MP4, actualTitleMs / 1000);
+  mux(videoPath, AUDIO, OUT_MP4, actualTitleMs / 1000, trimSec);
   const destMs = audioDurationMs(OUT_MP4);
-  console.log("mp4", OUT_MP4, destMs);
+  console.log("mp4", OUT_MP4, destMs, { actualTitleMs, trimSec });
 }
 
 main().catch((err) => {
