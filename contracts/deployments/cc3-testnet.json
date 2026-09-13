@@ -1,10 +1,14 @@
 {
   "network": "Creditcoin CC3 Testnet",
   "chainId": 102031,
-  "paidline": "0x6e88109Cf1f9679FAB8Faf2eD9C8bbCD8566a2c7",
+  "paidline": "0x4fB6aB16B3CEf1853DF4247b245E4de139108339",
   "deployer": "0xd9EA8ff9654cF57820977663767707ce0db0B6C4",
-  "deployTx": "0x04a9f2ad3b9150393860aaf6f57fa9736cd3ec5d71bbcc047b896319b79848ac",
+  "deployTx": "0x1bfe3e327dc39245f89179ff5d056a7d8c92bf21e4476bd619d63970bab618ec",
   "sourceChainKey": 1,
   "explorer": "https://creditcoin-testnet.blockscout.com",
-  "note": "Live demo address. This commit patches query-id replay and Transfer-log scanning — redeploy and replace this file."
+  "verified": true,
+  "compiler": "0.8.28",
+  "viaIR": true,
+  "evm": "cancun",
+  "note": "Query-id replay + Transfer-log scanning. Verified on Blockscout 13 Sep 2026. forge script failed (prevrandao); deployed with forge create --legacy."
 }

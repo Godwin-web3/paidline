@@ -38,17 +38,22 @@ Full sequence, addresses, and what we do *not* trust the relayer for: [`docs/ATT
 
 Creditcoin CC3 testnet (chain id `102031`).
 
-[`0x6e88109Cf1f9679FAB8Faf2eD9C8bbCD8566a2c7`](https://creditcoin-testnet.blockscout.com/address/0x6e88109Cf1f9679FAB8Faf2eD9C8bbCD8566a2c7)
+[`0x4fB6aB16B3CEf1853DF4247b245E4de139108339`](https://creditcoin-testnet.blockscout.com/address/0x4fB6aB16B3CEf1853DF4247b245E4de139108339) — **verified** on Blockscout.
+
+Deploy tx: [`0x1bfe3e327dc39245f89179ff5d056a7d8c92bf21e4476bd619d63970bab618ec`](https://creditcoin-testnet.blockscout.com/tx/0x1bfe3e327dc39245f89179ff5d056a7d8c92bf21e4476bd619d63970bab618ec)
 
 USDC Sepolia: [`0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`](https://sepolia.etherscan.io/token/0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238)
 
-Source chain key on CC3 testnet: `1`.
+Source chain key on CC3 testnet: `1`. Deployer: `0xd9EA8ff9654cF57820977663767707ce0db0B6C4`.
 
-This commit patches replay binding and Transfer-log scanning. Redeploy with the script below, then update `src/lib/paidline/constants.ts` and `contracts/deployments/cc3-testnet.json`. Verify on Blockscout:
+`forge script` on this RPC fails (`prevrandao not set`). Deploy with:
 
 ```bash
 cd contracts
-forge script script/Deploy.s.sol:Deploy --rpc-url https://rpc.cc3-testnet.creditcoin.network --broadcast --private-key $CREDITCOIN_PRIVATE_KEY
+forge create src/Paidline.sol:Paidline \
+  --rpc-url https://rpc.cc3-testnet.creditcoin.network \
+  --private-key $CREDITCOIN_PRIVATE_KEY \
+  --broadcast --legacy --chain 102031
 forge verify-contract <ADDR> src/Paidline.sol:Paidline \
   --verifier blockscout \
   --verifier-url https://creditcoin-testnet.blockscout.com/api/ \

@@ -16,6 +16,8 @@ Copy into the BUIDL CTC 2026 Fall form. Deadline: 14 Sep 2026 03:59 UTC.
 
 **Live app:** https://paidline.vercel.app
 
+**Contract (CC3 testnet, verified):** https://creditcoin-testnet.blockscout.com/address/0x4fB6aB16B3CEf1853DF4247b245E4de139108339
+
 **Attestcoin Protocol integration summary:**
 
 Paidline inherits ASCBase. A Sepolia USDC transfer is proved through Attestcoin precompile 0x0FD2 (Merkle inclusion + continuity). queryId is keccak256(chainKey, blockHeight, txIndex). After the proof, the contract requires receipt status 1, scans Transfer logs for exact token, recipient, and amount, then marks the listing paid and releases a Creditcoin receipt bond to the payer. Replay is keyed on query id and the proved body — the relayer cannot assert payment. Other contracts call isPaid; they never talk to Attestcoin. Agents get HTTP 402 until paid, 200 after. Full write-up: docs/ATTESTCOIN.md

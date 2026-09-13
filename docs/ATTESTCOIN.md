@@ -65,15 +65,15 @@ Listings lock native Creditcoin at create/fund time. That lock is a receipt bond
 
 | Item | Value |
 |---|---|
-| Paidline | `0x6e88109Cf1f9679FAB8Faf2eD9C8bbCD8566a2c7` |
-| Deploy tx | `0x04a9f2ad3b9150393860aaf6f57fa9736cd3ec5d71bbcc047b896319b79848ac` |
+| Paidline | [`0x4fB6aB16B3CEf1853DF4247b245E4de139108339`](https://creditcoin-testnet.blockscout.com/address/0x4fB6aB16B3CEf1853DF4247b245E4de139108339) (verified) |
+| Deploy tx | [`0x1bfe3e327dc39245f89179ff5d056a7d8c92bf21e4476bd619d63970bab618ec`](https://creditcoin-testnet.blockscout.com/tx/0x1bfe3e327dc39245f89179ff5d056a7d8c92bf21e4476bd619d63970bab618ec) |
 | Chain id | `102031` |
 | Block prover | `0x0000000000000000000000000000000000000FD2` |
 | Sepolia chain key | `1` |
 | USDC Sepolia | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` |
 | Proof builder | `https://prover.cc3-testnet.creditcoin.network` |
 
-Redeploy after this commit to pick up query-id replay binding and log scanning. Verify the new address on Blockscout (see README).
+This address is the query-id replay + Transfer-log scanning build, verified on Blockscout.
 
 ## Tests that pin this behavior
 
