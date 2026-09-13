@@ -400,10 +400,11 @@ async function rewarm(warmPage, url, needle) {
   }
 }
 
-function mux(webmPath, audioPath, destPath, delaySec) {
+function mux(webmPath, audioPath, destPath, delaySec, trimSec = 0) {
   const staged = destPath + ".partial.mp4";
   const args = [
     "-y",
+    ...(trimSec > 0.05 ? ["-ss", trimSec.toFixed(3)] : []),
     "-i",
     webmPath,
     "-itsoffset",
@@ -659,18 +660,23 @@ async function main() {
   filmPage = page;
   page.setDefaultTimeout(25000);
   page.setDefaultNavigationTimeout(30000);
+  const recStart = Date.now();
 
   await page.goto(BASE + "/", { waitUntil: "domcontentloaded", timeout: 30000 });
   await waitText(page, "List work", 15000);
+  // Wait for the board under the not-yet-shown title, then paint the card.
+  // That wait is trimmed from the mp4 (trimSec) so TITLE_MS stays 3s and
+  // VO does not start over a skeleton board.
   await waitText(page, "#9", 20000).catch(() => {});
-  await waitText(page, "live listing", 15000).catch(() => {});
   await page.evaluate(paintTitleOverlay);
+  const titleAt = Date.now();
   await sleep(page, TITLE_MS);
   await page.evaluate(() => document.getElementById("pl-title")?.remove());
   await injectCursor(page);
-  const actualTitleMs = TITLE_MS;
   voZero = Date.now();
-  logScene("vo-zero", { actualTitleMs });
+  const trimSec = Math.max(0, (titleAt - recStart) / 1000);
+  const actualTitleMs = voZero - titleAt;
+  logScene("vo-zero", { actualTitleMs, trimSec, recLeadMs: titleAt - recStart });
 
   await walkLandingHero(page);
   await walkLandingProduct(page);
@@ -732,6 +738,11 @@ async function main() {
 
   view = await revealByBeat(page, paidId, "Get the work", "Paid · listing 9", BEATS.unpaid);
   logScene("paid", { vo: voNow() });
+  // Receipt + gate/9 are slow RPC pages — start them immediately, not after
+  // the work scroll, or the receipt cut lands late (first tape: +2.3s).
+  void rewarm(warmPage, BASE + "/receipt/9", "10.000247");
+  const receiptId = await startFrame(page, BASE + "/receipt/9");
+  const gate9Id = await startFrame(page, GATE_BASE + "/gate/9");
   await hoverText(view, "Amount", { mayScroll: true });
   await sleep(page, 500);
   await hoverText(view, "Listing #9", { mayScroll: true });
@@ -742,9 +753,6 @@ async function main() {
   await work.hover().catch(() => {});
   await hoverText(view, "Get the work", { mayScroll: true });
   logScene("paid-work-visible", { vo: voNow() });
-  void rewarm(warmPage, BASE + "/receipt/9", "10.000247");
-  const receiptId = await startFrame(page, BASE + "/receipt/9");
-  const gate9Id = await startFrame(page, GATE_BASE + "/gate/9");
   await holdUntil(page, BEATS.paid - 800);
 
   view = await revealByBeat(page, receiptId, "10.000247", "Receipt · on-chain paid", BEATS.paid);
@@ -787,9 +795,9 @@ async function main() {
   if (!videoPath) throw new Error("Playwright did not write a video");
   console.log("video", videoPath);
 
-  mux(videoPath, AUDIO, OUT_MP4, actualTitleMs / 1000);
+  mux(videoPath, AUDIO, OUT_MP4, actualTitleMs / 1000, trimSec);
   const destMs = audioDurationMs(OUT_MP4);
-  console.log("mp4", OUT_MP4, destMs);
+  console.log("mp4", OUT_MP4, destMs, { actualTitleMs, trimSec });
 }
 
 main().catch((err) => {
