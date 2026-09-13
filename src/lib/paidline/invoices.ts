@@ -3,6 +3,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { Contract, JsonRpcProvider, Wallet, zeroPadValue } from "ethers";
 import { PAIDLINE_ABI } from "./abi.ts";
 import { readInvoice, readInvoices, readOpen, readSettled } from "./chain.ts";
+import { getWorkIfPaid, hasWork, hasWorkIds } from "./work.ts";
+import type { Invoice } from "./types.ts";
+import type { WorkPayload } from "./work-format.ts";
 import {
   CREDITCOIN_RPC,
   PAIDLINE_ADDRESS,
@@ -13,14 +16,25 @@ import {
   USDC_SEPOLIA,
 } from "./constants.ts";
 
-function toWire(inv: Awaited<ReturnType<typeof readInvoice>>) {
-  if (!inv) return null;
+function baseWire(inv: Invoice, hasSealedWork: boolean, work: WorkPayload | null) {
   return {
     ...inv,
     sourceAmount: inv.sourceAmount.toString(),
     localAmount: inv.localAmount.toString(),
+    hasWork: hasSealedWork,
+    work,
   };
 }
+
+async function toWire(inv: Invoice | null, includeWork: boolean) {
+  if (!inv) return null;
+  const sealed = await hasWork(inv.id);
+  const work =
+    includeWork && inv.status === "paid" ? await getWorkIfPaid(inv.id, true) : null;
+  return baseWire(inv, sealed, work);
+}
+
+export { sealWork } from "./work.ts";
 
 export const getInvoice = createServerFn({ method: "GET" })
   .validator((d: { id: number }) => {
@@ -28,7 +42,7 @@ export const getInvoice = createServerFn({ method: "GET" })
     if (!Number.isInteger(id) || id < 1) throw new Error("Bad invoice id.");
     return { id };
   })
-  .handler(async ({ data }) => toWire(await readInvoice(data.id)));
+  .handler(async ({ data }) => toWire(await readInvoice(data.id), true));
 
 export const listInvoices = createServerFn({ method: "GET" })
   .validator((d: unknown) => {
@@ -41,29 +55,20 @@ export const listInvoices = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     if (!data.merchant) return [];
     const rows = await readInvoices(data.merchant);
-    return rows.map((inv) => ({
-      ...inv,
-      sourceAmount: inv.sourceAmount.toString(),
-      localAmount: inv.localAmount.toString(),
-    }));
+    const sealed = await hasWorkIds();
+    return rows.map((inv) => baseWire(inv, sealed.has(inv.id), null));
   });
 
 export const listSettled = createServerFn({ method: "GET" }).handler(async () => {
   const rows = await readSettled(12);
-  return rows.map((inv) => ({
-    ...inv,
-    sourceAmount: inv.sourceAmount.toString(),
-    localAmount: inv.localAmount.toString(),
-  }));
+  const sealed = await hasWorkIds();
+  return rows.map((inv) => baseWire(inv, sealed.has(inv.id), null));
 });
 
 export const listOpen = createServerFn({ method: "GET" }).handler(async () => {
   const rows = await readOpen(24);
-  return rows.map((inv) => ({
-    ...inv,
-    sourceAmount: inv.sourceAmount.toString(),
-    localAmount: inv.localAmount.toString(),
-  }));
+  const sealed = await hasWorkIds();
+  return rows.map((inv) => baseWire(inv, sealed.has(inv.id), null));
 });
 
 export type GateBody =
@@ -82,6 +87,7 @@ export type GateBody =
       release: string;
       sourceTx: string | null;
       isPaid: true;
+      work?: WorkPayload;
     };
 
 export async function gateFor(invoiceId: number, origin: string): Promise<{ status: number; body: GateBody }> {
@@ -94,6 +100,7 @@ export async function gateFor(invoiceId: number, origin: string): Promise<{ stat
     };
   }
   if (invoice.status === "paid") {
+    const work = await getWorkIfPaid(invoiceId, true);
     return {
       status: 200,
       body: {
@@ -103,6 +110,7 @@ export async function gateFor(invoiceId: number, origin: string): Promise<{ stat
         release: invoice.releaseLabel,
         sourceTx: invoice.paidTxHash,
         isPaid: true,
+        ...(work ? { work } : {}),
       },
     };
   }

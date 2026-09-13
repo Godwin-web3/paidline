@@ -15,7 +15,7 @@ Creditcoin already proves that a foreign-chain transaction happened. Most apps s
 - Seller lists work. Anyone may buy it. First matching USDC claims it.
 - USDC lands at the seller. Paidline never holds it.
 - Other contracts call `isPaid(id)` or listen for `InvoicePaid`. They do not talk to Attestcoin.
-- Agents hit `GET /api/gate/:id` — **402** until paid, **200** after. Same URL. x402.
+- Agents hit `GET /api/gate/:id` — **402** until paid, **200** with the work after. Same URL. x402.
 
 This is not a credit score and not invoice financing. It is a settlement primitive: remote proof, local action.
 
@@ -68,14 +68,16 @@ forge verify-contract <ADDR> src/Paidline.sol:Paidline \
 
 - **Marketplace** — every funded unpaid listing, public, no wallet to watch
 - **Listings** — what you published, tied to your Creditcoin wallet
-- **New listing** — title, USDC price, credit to lock, due date
-- **Checkout** — send exact USDC on Ethereum Sepolia, or paste the hash
-- **Receipt** — both explorer links once the contract confirms
-- **API** — `GET /api/gate/:id` returns **402** until paid, **200** after
+- **New listing** — attach the work, USDC price, credit to lock, due date. Work stays locked until `isPaid`.
+- **Checkout** — send exact USDC on Ethereum Sepolia, or paste the hash. Paid listings show **Get the work**.
+- **Receipt** — both explorer links once the contract confirms, plus the unlocked work
+- **API** — `GET /api/gate/:id` returns **402** until paid, **200** with the payload after
 
-Locked Creditcoin is a tiny receipt bond, not the goods. It releases to the wallet that sent the matching USDC so the buyer holds an on-chain stamp. The work itself is gated by `isPaid` or the HTTP gate.
+Locked Creditcoin is a tiny receipt bond, not the goods. It releases to the wallet that sent the matching USDC so the buyer holds an on-chain stamp. The work itself is sealed at list time and gated by `isPaid` or the HTTP gate.
 
-Two open listings cannot share the same chain, token, destination, and amount. One payment can only mean one invoice.
+Two open listings cannot share the same chain, token, destination, and amount. New listings add a few micro-USDC to the sticker price so two $250 retainers can sit on the same wallet. One payment can only mean one invoice. First matching proof still wins that listing.
+
+Set `DATABASE_URL` (Neon) in production so newly attached work survives deploys. The eight live demo listings ship their work in the app so judges can pay and unlock without a database.
 
 ## For other contracts
 
@@ -94,7 +96,7 @@ interface IPaidline {
 GET /api/gate/:id
 ```
 
-Unpaid → `402 Payment Required` with amount and checkout URL. Paid → `200` and the resource. Agents retry the same request after paying.
+Unpaid → `402 Payment Required` with amount and checkout URL. Paid → `200` and the work (`work.kind` + `work.body`). Agents retry the same request after paying.
 
 ## Tests
 

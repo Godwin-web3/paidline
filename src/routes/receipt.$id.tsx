@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { WorkUnlock } from "@/components/work-unlock";
 import { InvoiceSheet, SheetMeta } from "@/components/invoice-sheet";
 import { ReceiptStamp } from "@/components/receipt-stamp";
 import { Button } from "@/components/ui/button";
@@ -101,6 +102,9 @@ function ReceiptPage() {
             </a>
           </SheetMeta>
         </dl>
+        <div className="mt-8">
+          <WorkUnlock work={invoice.work} paper />
+        </div>
         <p className="mt-8 text-sm leading-relaxed text-ink-muted">
           The contract marked this paid. No company in the middle confirmed it.
         </p>

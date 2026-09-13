@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { WorkUnlock } from "@/components/work-unlock";
 import { Button } from "@/components/ui/button";
 import { SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { getGate, type GateBody } from "@/lib/paidline/invoices";
@@ -42,8 +43,8 @@ function GatePage() {
       <p className="kicker">API</p>
       <h1 className="mt-1 font-display text-3xl tracking-tight">GET /api/gate/{id}</h1>
       <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-        Unpaid listings return 402. Paid listings return 200. The body is JSON. Paidline does not
-        serve the work until the contract says it is paid.
+        Unpaid listings return 402. Paid listings return 200 with the work. Paidline does not serve
+        the payload until the contract says it is paid.
       </p>
 
       <div className="mt-8 overflow-hidden rounded-xl border border-line bg-surface">
@@ -76,6 +77,11 @@ function GatePage() {
           <p className="text-sm text-paid">Access granted</p>
           <p className="mt-2 font-display text-2xl tracking-tight">{body.title}</p>
           <p className="mt-2 text-sm text-muted">{body.release}</p>
+          {"work" in body && body.work ? (
+            <div className="mt-4">
+              <WorkUnlock work={body.work} />
+            </div>
+          ) : null}
           <Link
             to="/receipt/$id"
             params={{ id: String(invoiceId) }}

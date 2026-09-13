@@ -29,7 +29,7 @@ function GateLookup() {
       <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Pay, then get the resource</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted">
         An agent or app calls this endpoint. Unpaid listings return HTTP 402 with a checkout link.
-        After the contract stamps payment, the same call returns 200.
+        After the contract stamps payment, the same call returns 200 and the work.
       </p>
       <form onSubmit={onSubmit} className="mt-8 grid gap-4 rounded-xl border border-line bg-surface p-5">
         <Field label="Invoice number" hint="Try a live listing from the marketplace.">

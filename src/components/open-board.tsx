@@ -65,6 +65,9 @@ export function OpenBoard({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{inv.title}</p>
                   <p className="mt-1 truncate text-xs text-muted">{inv.releaseLabel}</p>
+                  {inv.hasWork ? (
+                    <p className="mt-1 text-[11px] uppercase tracking-wide text-faint">Includes work</p>
+                  ) : null}
                 </div>
                 <p className="shrink-0 font-display text-xl tabular-nums tracking-tight">
                   {formatUnits(BigInt(inv.sourceAmount), SOURCE_DECIMALS)}
@@ -124,6 +127,12 @@ export function OpenBoard({
                   </p>
                   <p className="mt-1 truncate text-xs text-muted">
                     {inv.releaseLabel}
+                    {inv.hasWork ? (
+                      <>
+                        <span className="mx-1.5 text-faint">·</span>
+                        Includes work
+                      </>
+                    ) : null}
                     <span className="mx-1.5 text-faint">·</span>
                     {shortAddr(inv.sourceRecipient, 4)}
                   </p>

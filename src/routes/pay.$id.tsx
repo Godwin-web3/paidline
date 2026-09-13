@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { InvoiceSheet, SheetMeta } from "@/components/invoice-sheet";
 import { SheetSkeleton } from "@/components/skeleton";
+import { WorkLocked, WorkUnlock } from "@/components/work-unlock";
 import { SEPOLIA_EXPLORER, SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { confirmPayment, findMatchingTransfer, getInvoice } from "@/lib/paidline/invoices";
 import type { InvoiceWire } from "@/lib/paidline/types";
@@ -132,6 +133,9 @@ function BuyerPay() {
         <h1 className="mt-3 font-display text-4xl tracking-tight text-ink">{invoice.title}</h1>
         <p className="mt-2 text-sm text-ink-muted">
           Send exactly {amount} USDC on Ethereum Sepolia. First matching payment claims this listing.
+          {live.hasWork
+            ? " The work stays locked until the contract says paid."
+            : ""}
         </p>
 
         <dl className="mt-8 grid gap-5">
@@ -160,6 +164,13 @@ function BuyerPay() {
           </SheetMeta>
           <SheetMeta label="You receive">{invoice.releaseLabel}</SheetMeta>
         </dl>
+        <div className="mt-8">
+          {alreadyPaid ? (
+            <WorkUnlock work={invoice.work} paper />
+          ) : live.hasWork ? (
+            <WorkLocked paper />
+          ) : null}
+        </div>
       </InvoiceSheet>
 
       {alreadyPaid ? (
@@ -168,7 +179,10 @@ function BuyerPay() {
             <Check className="size-4" strokeWidth={2} />
             Paid
           </p>
-          <p className="mt-2 text-sm text-muted">{invoice.releaseLabel} is yours.</p>
+          <p className="mt-2 text-sm text-muted">
+            {invoice.releaseLabel} is yours.
+            {invoice.hasWork ? " The work is unlocked above." : ""}
+          </p>
           {invoice.paidTxHash ? (
             <a
               className="mt-3 inline-block font-mono text-xs text-muted underline underline-offset-4"

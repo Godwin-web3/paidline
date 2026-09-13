@@ -1,3 +1,5 @@
+import type { WorkPayload } from "./work-format.ts";
+
 export type InvoiceStatus = "unpaid" | "paid" | "cancelled" | "expired";
 
 export type Invoice = {
@@ -21,9 +23,13 @@ export type Invoice = {
   funded: boolean;
 };
 
+export type { WorkKind, WorkPayload } from "./work-format.ts";
+
 export type InvoiceWire = Omit<Invoice, "sourceAmount" | "localAmount"> & {
   sourceAmount: string;
   localAmount: string;
+  hasWork: boolean;
+  work: WorkPayload | null;
 };
 
 export type TransferLog = {

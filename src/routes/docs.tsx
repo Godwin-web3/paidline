@@ -56,8 +56,8 @@ if (res.status === 402) {
   // send the buyer or agent to pay, then retry
 }
 if (res.status === 200) {
-  const body = await res.json()
-  // serve the resource
+  const { work } = await res.json()
+  // work.kind is "link" or "text"; work.body is the payload
 }`;
 
 function DocsPage() {
@@ -127,11 +127,11 @@ function DocsPage() {
           <h2 className="font-display text-3xl tracking-tight">How it works</h2>
           <ol className="mt-6 divide-y divide-line">
             {[
-              ["01", "Issue", "The invoice is written on Creditcoin: amount, destination, expiry, what the buyer receives. Creditcoin may be locked against it."],
+              ["01", "Issue", "The invoice is written on Creditcoin: the work, amount, destination, expiry. The work stays off-chain and locked until paid. Creditcoin may be locked against the listing."],
               ["02", "Pay", "The buyer sends USDC on Ethereum. Paidline never receives that USDC."],
               ["03", "Prove", "Anyone may submit the Ethereum transaction. Attestcoin says whether it is in the chain. The submitter does not get to assert that it is."],
               ["04", "Match", "Right token, right address, exact amount, open invoice, unused hash. Anything else is rejected."],
-              ["05", "Stamp", "isPaid becomes true. InvoicePaid is emitted. Locked Creditcoin releases. Same transaction."],
+              ["05", "Stamp", "isPaid becomes true. InvoicePaid is emitted. Locked Creditcoin releases. Checkout and GET /api/gate/:id serve the work. Same fact."],
             ].map(([n, t, d]) => (
               <li key={n} className="grid grid-cols-[3rem_1fr] gap-3 py-5">
                 <span className="font-mono text-xs text-faint">{n}</span>
@@ -185,7 +185,7 @@ function DocsPage() {
             {[
               ["A seller on Creditcoin", "They invoice in USDC. The buyer pays on Ethereum the way they already pay. The desk shows pending, then paid, with the hash."],
               ["A buyer who will not open a new chain", "They get a number and an amount. They send USDC. They do not operate the proof."],
-              ["An agent calling an API", "The endpoint returns 402 until the invoice is paid. After the stamp, the same request returns the resource. x402 with your checker, not someone else’s."],
+              ["An agent calling an API", "The endpoint returns 402 until the invoice is paid. After the stamp, the same request returns the work. x402 with your checker, not someone else’s."],
               ["Another contract", "It calls isPaid or listens for InvoicePaid. It does not integrate Attestcoin. Paidline is the checker."],
               ["A marketplace that will not hold funds", "The board is the marketplace. Listings are public. First matching USDC claims the lock. No auction contract. No admin wallet."],
               ["A protocol gating work", "Mint, unlock, flip a role — after isPaid is true. The payment is the fact. Your contract is the consequence."],
@@ -214,7 +214,7 @@ function DocsPage() {
           <h2 className="font-display text-3xl tracking-tight">x402</h2>
           <p className="mt-4 text-sm leading-relaxed text-muted">
             Drop this in front of a resource. Unpaid invoices return 402 with a pay URL. Paid
-            invoices return 200. Retry after the stamp. No new Solidity.
+            invoices return 200 and the work. Retry after the stamp. No new Solidity.
           </p>
           <div className="mt-6">
             <CodeBlock label="TypeScript" code={GATE} />

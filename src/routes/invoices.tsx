@@ -66,7 +66,8 @@ function Invoices() {
           )
         }
       >
-        What you published. Open ones sit on the marketplace until someone pays.
+        What you published. Open ones sit on the marketplace until someone pays. Work stays sealed
+        until the contract says paid.
       </PageHeader>
 
       {error ? <p className="mt-6 text-sm text-bad">{error}</p> : null}
@@ -136,7 +137,7 @@ function EmptyDesk() {
       <div className="relative">
         <h2 className="font-display text-3xl tracking-tight text-ink">Nothing published yet</h2>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
-          Name the work, set a price, lock a little credit. It goes live on the marketplace.
+          Name the work, attach it, set a price, lock a little credit. It goes live on the marketplace.
         </p>
         <Link to="/new" className="mt-6 inline-block">
           <Button variant="ink">New listing</Button>

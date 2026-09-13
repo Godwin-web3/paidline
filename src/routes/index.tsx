@@ -70,10 +70,10 @@ function Home() {
           </p>
           <ol className="mt-10 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
             {[
-              ["01", "List", "Creditcoin", "Publish the work, the exact USDC price, and a small Creditcoin lock."],
+              ["01", "List", "Creditcoin", "Attach the work, the exact USDC price, and a small Creditcoin lock. The work stays sealed."],
               ["02", "Pay", "Ethereum", "A buyer sends that USDC from any wallet. Paidline never holds it."],
               ["03", "Prove", "Attestcoin", "A Merkle proof of that transfer is submitted. The submitter has no opinion."],
-              ["04", "Confirm", "isPaid", "The listing is paid. The lock goes to the buyer. Other contracts can ask."],
+              ["04", "Confirm", "isPaid", "The listing is paid. Checkout unlocks the work. Other contracts can ask."],
             ].map(([n, t, chain, d]) => (
               <li key={n} className="bg-surface p-5 sm:p-6">
                 <p className="flex items-center justify-between font-mono text-[11px] text-faint">
@@ -130,7 +130,7 @@ function Home() {
             />
             <Audience
               title="Agents"
-              body="Call an API. If it’s unpaid you get HTTP 402 and a pay link. After payment, the same call returns 200."
+              body="Call an API. If it’s unpaid you get HTTP 402 and a pay link. After payment, the same call returns 200 and the work."
               to="/gate"
               label="Try the API"
             />

@@ -5,6 +5,7 @@ import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { InvoiceSheet, SheetMeta } from "@/components/invoice-sheet";
 import { SheetSkeleton } from "@/components/skeleton";
+import { WorkUnlock } from "@/components/work-unlock";
 import {
   CREDITCOIN_EXPLORER,
   LOCAL_DECIMALS,
@@ -156,6 +157,13 @@ function SellerInvoice() {
             <Check className="size-4" strokeWidth={2} />
             Paid. {invoice.releaseLabel} released. No one in the middle confirmed this.
           </p>
+          {invoice.work ? (
+            <div className="mt-4 max-w-5xl">
+              <WorkUnlock work={invoice.work} />
+            </div>
+          ) : invoice.hasWork ? (
+            <p className="mt-3 text-sm text-muted">Work was sealed to this listing. Open the receipt to read it.</p>
+          ) : null}
           <Link
             to="/receipt/$id"
             params={{ id: String(invoice.id) }}
@@ -180,6 +188,11 @@ function SellerInvoice() {
           ) : null}
         </div>
       )}
+      {invoice.status !== "paid" && invoice.hasWork ? (
+        <p className="mt-4 text-sm text-muted">
+          Work is sealed to this listing. Buyers see it on checkout after the contract says paid.
+        </p>
+      ) : null}
       {err ? <p className="mt-4 text-sm text-bad">{err}</p> : null}
       <p className="mt-6 text-xs text-faint">
         <a

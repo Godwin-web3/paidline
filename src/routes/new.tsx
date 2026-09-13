@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/input";
+import { Field, Input, Textarea } from "@/components/ui/input";
 import { InvoiceSheet, SheetMeta } from "@/components/invoice-sheet";
 import { LOCAL_DECIMALS, SOURCE_DECIMALS } from "@/lib/paidline/constants";
 import { useSession } from "@/lib/paidline/session";
+import { pickDust, uniqueExactUsdc } from "@/lib/paidline/work-format";
 import { createOnchainInvoice, hasWallet } from "@/lib/paidline/wallet";
-import { parseUnits, shortAddr } from "@/lib/utils";
+import { sealWork } from "@/lib/paidline/invoices";
+import { formatUnits, parseUnits, shortAddr } from "@/lib/utils";
 
 export const Route = createFileRoute("/new")({
   head: () => ({ meta: [{ title: "New listing · Paidline" }] }),
@@ -27,10 +29,12 @@ function NewInvoice() {
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [releaseLabel, setReleaseLabel] = useState("");
+  const [work, setWork] = useState("");
   const [escrow, setEscrow] = useState("");
   const [hours, setHours] = useState(168);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dust] = useState(() => pickDust());
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -38,11 +42,21 @@ function NewInvoice() {
       setError("Name the work and set a price.");
       return;
     }
+    if (work.trim().length < 8) {
+      setError("Attach the work. A short brief or a URL. It stays locked until the listing is paid.");
+      return;
+    }
     if (!/^\d+(\.\d+)?$/.test(price.trim()) || !/^\d+(\.\d+)?$/.test(escrow.trim())) {
       setError("Use a number for the price and the locked amount.");
       return;
     }
-    const sourceAmount = parseUnits(price, SOURCE_DECIMALS);
+    let sourceAmount: bigint;
+    try {
+      sourceAmount = uniqueExactUsdc(price, dust);
+    } catch {
+      setError("Name the work and set a price.");
+      return;
+    }
     const lock = parseUnits(escrow, LOCAL_DECIMALS);
     if (sourceAmount <= 0n) {
       setError("Name the work and set a price.");
@@ -65,15 +79,41 @@ function NewInvoice() {
         setBusy(false);
         return;
       }
-      const id = await createOnchainInvoice({
-        title: title.trim(),
-        releaseLabel: releaseLabel.trim() || "Paid",
-        sourceRecipient: account,
-        sourceAmount,
-        escrowTctc: escrow.trim(),
-        hours,
-      });
+      let id = 0;
+      try {
+        id = await createOnchainInvoice({
+          title: title.trim(),
+          releaseLabel: releaseLabel.trim() || "Paid",
+          sourceRecipient: account,
+          sourceAmount,
+          escrowTctc: escrow.trim(),
+          hours,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "";
+        if (!/already have an open invoice/i.test(msg)) throw err;
+        id = await createOnchainInvoice({
+          title: title.trim(),
+          releaseLabel: releaseLabel.trim() || "Paid",
+          sourceRecipient: account,
+          sourceAmount: uniqueExactUsdc(price, pickDust()),
+          escrowTctc: escrow.trim(),
+          hours,
+        });
+      }
       if (!id) throw new Error("Invoice created but the id was missing from the receipt.");
+      try {
+        await sealWork({ data: { invoiceId: id, merchant: account, body: work } });
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? `Listing #${id} is live, but the work did not save. ${err.message}`
+            : `Listing #${id} is live, but the work did not save.`,
+        );
+        await navigate({ to: "/invoice/$id", params: { id: String(id) } });
+        setBusy(false);
+        return;
+      }
       await navigate({ to: "/invoice/$id", params: { id: String(id) } });
     } catch (err) {
       setError(err instanceof Error ? err.message : "The wallet or network refused the transaction.");
@@ -82,14 +122,22 @@ function NewInvoice() {
   }
 
   const dueLabel = DUE_OPTIONS.find((o) => o.hours === hours)?.label ?? "7 days";
+  let checkoutAmount = price.trim() || "0.00";
+  try {
+    if (price.trim() && /^\d+(\.\d+)?$/.test(price.trim())) {
+      checkoutAmount = formatUnits(uniqueExactUsdc(price, dust), SOURCE_DECIMALS);
+    }
+  } catch {
+    /* keep the sticker price until it parses */
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <p className="kicker">New listing</p>
       <h1 className="mt-1 font-display text-3xl tracking-tight sm:text-4xl">Create a listing</h1>
       <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-        Name the work, the exact USDC price, and the Creditcoin you lock. It goes public as soon as
-        the transaction confirms. First matching payment claims it.
+        Attach the work, set a USDC price, and lock Creditcoin. The work stays locked until the
+        contract says paid. First matching payment claims the listing.
         {address ? (
           <>
             {" "}
@@ -115,7 +163,7 @@ function NewInvoice() {
             <Field
               paper
               label="Price in USDC"
-              hint="The buyer must send this exact amount. You cannot have two open listings at the same price to this wallet."
+              hint={`Checkout asks for ${checkoutAmount} USDC — a few micro-units above the sticker so two listings at the same price do not collide. First matching payment still claims it.`}
             >
               <Input
                 value={price}
@@ -125,13 +173,30 @@ function NewInvoice() {
                 className="border-rule bg-paper text-ink placeholder:text-ink-muted"
               />
             </Field>
-            <Field label="What the buyer gets" paper>
+            <Field
+              paper
+              label="What the buyer gets"
+              hint="One line on the listing. The actual work is the field below."
+            >
               <Input
                 value={releaseLabel}
                 onChange={(e) => setReleaseLabel(e.target.value)}
                 className="border-rule bg-paper font-sans text-ink placeholder:text-ink-muted"
                 placeholder="Delivery of the work"
                 autoComplete="off"
+              />
+            </Field>
+            <Field
+              paper
+              label="The work"
+              hint="A brief, spec, or https URL. Buyers see this only after the contract says paid. Agents get it on HTTP 200."
+            >
+              <Textarea
+                value={work}
+                onChange={(e) => setWork(e.target.value)}
+                className="border-rule bg-paper text-ink placeholder:text-ink-muted"
+                placeholder="Paste the deliverable or a link to it."
+                maxLength={8000}
               />
             </Field>
             <Field
@@ -182,11 +247,16 @@ function NewInvoice() {
             <dl className="mt-8 grid gap-5">
               <SheetMeta label="Amount due">
                 <span className="font-display text-5xl tabular-nums tracking-tight">
-                  {price.trim() || "0.00"}
+                  {checkoutAmount}
                   <span className="ml-2 text-xl text-ink-muted">USDC</span>
                 </span>
               </SheetMeta>
               <SheetMeta label="You receive">{releaseLabel.trim() || "—"}</SheetMeta>
+              <SheetMeta label="Work">
+                {work.trim()
+                  ? "Sealed until paid"
+                  : "Attach the work — it stays locked until paid"}
+              </SheetMeta>
               <SheetMeta label="Pay to">
                 <span className="font-mono text-xs">
                   {address ? shortAddr(address, 6) : "Connect to set destination"}

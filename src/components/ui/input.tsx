@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
@@ -9,6 +9,21 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
         "h-11 w-full rounded-md border border-line bg-bg px-3 text-sm text-fg placeholder:text-faint",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50",
         "font-mono",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      suppressHydrationWarning
+      className={cn(
+        "min-h-36 w-full resize-y rounded-md border border-line bg-bg px-3 py-2.5 text-sm text-fg placeholder:text-faint",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50",
+        "font-sans leading-relaxed",
         className,
       )}
       {...props}
