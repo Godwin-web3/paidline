@@ -20,12 +20,12 @@ function DemoPage() {
         controls
         playsInline
         preload="metadata"
-        src="/demo.mp4?v=vo-lock"
+        src="/demo.mp4?v=vo-lock-pointer"
       >
-        <a href="/demo.mp4?v=vo-lock">Download the demo</a>
+        <a href="/demo.mp4?v=vo-lock-pointer">Download the demo</a>
       </video>
       <p className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
-        <a href="/demo.mp4?v=vo-lock" download className="hover:text-fg">
+        <a href="/demo.mp4?v=vo-lock-pointer" download className="hover:text-fg">
           Download video
         </a>
         <a href="/demo.mp3" download className="hover:text-fg">
