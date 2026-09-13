@@ -706,7 +706,10 @@ async function main() {
   const paidId = await startFrame(page, BASE + "/pay/9");
   void rewarm(warmPage, BASE + "/pay/1", "locked");
   const unpaidId = await startFrame(page, BASE + "/pay/1");
-  await hoverText(view, /250\.\d+/, { mayScroll: true, block: "center" });
+  const previewAmt = view.locator("span.font-display").filter({ hasText: /250\./ }).first();
+  if (!(await pointLocator(previewAmt, { mayScroll: true, block: "center" }))) {
+    await hoverText(view, /250\.\d+/, { mayScroll: true, block: "center" });
+  }
   await holdOn(page, BEATS.create - 800);
 
   view = await revealByBeat(page, unpaidId, "Locked. It unlocks here", "Unpaid checkout · listing 1", BEATS.create);
@@ -748,12 +751,15 @@ async function main() {
   logScene("docs", { vo: voNow() });
   await view
     .locator("#ispai")
-    .evaluate((el) => el.scrollIntoView({ behavior: "instant", block: "start" }))
+    .evaluate((el) => el.scrollIntoView({ behavior: "instant", block: "center" }))
     .catch(() => {});
   await caption(page, "Remote proof. Local unlock.");
-  const isPaidHead = view.locator("#ispai h2").first();
-  if (!(await pointLocator(isPaidHead, { mayScroll: true, block: "start" }))) {
-    await hoverText(view, "isPaid", { exact: true, mayScroll: true, block: "start" });
+  const isPaidFn = view.getByText("function isPaid", { exact: false }).first();
+  if (!(await pointLocator(isPaidFn, { mayScroll: true, block: "center" }))) {
+    const isPaidHead = view.locator("#ispai h2").first();
+    if (!(await pointLocator(isPaidHead, { mayScroll: true, block: "center" }))) {
+      await hoverText(view, "isPaid", { exact: true, mayScroll: true, block: "center" });
+    }
   }
   await holdOn(page, Math.max(BEATS.docs, voiceMs + 400));
   logScene("end", { vo: voNow() });
