@@ -26,25 +26,30 @@ const TITLE_MS = 3000;
 
 /**
  * Absolute VO windows (ms). `until` is when the next topic must be on screen.
- * how starts ~47s so video ~0:50 is the four-steps section.
+ *
+ * Visuals lead the VO on purpose: hero is only a few seconds, then we scroll
+ * the landing and cut to #how well before the “four steps” line (~47–66s).
+ * Video timeline = TITLE_MS + VO, so #how lands ~27s into the file.
  */
 const BEATS = {
-  landingProblem: 24_000,
-  landingProduct: 44_000,
-  landingBoard: 45_000,
-  how: 80_000,
-  checker: 88_000,
-  marketplace: 115_000,
-  create: 140_000,
-  unpaid: 148_000,
-  paid: 185_000,
-  receipt: 194_000,
-  gate200: 200_000,
-  gate402: 205_000,
+  landingProblem: 8_000,
+  landingProduct: 16_000,
+  landingBoard: 24_000,
+  how: 68_000,
+  checker: 80_000,
+  marketplace: 100_000,
+  create: 124_000,
+  unpaid: 142_000,
+  paid: 168_000,
+  receipt: 180_000,
+  gate200: 192_000,
+  gate402: 201_000,
   docs: 211_000,
 };
 
 let voZero = 0;
+/** Recording tab — always the host for mouse / cursor, even when acting in an iframe. */
+let filmPage = null;
 
 function paintTitleOverlay() {
   const el = document.createElement("div");
@@ -117,8 +122,46 @@ async function caption(page, text) {
   }, text);
 }
 
+async function injectCursor(page) {
+  await page.evaluate(() => {
+    if (document.getElementById("pl-cursor")) return;
+    const c = document.createElement("div");
+    c.id = "pl-cursor";
+    c.style.cssText = [
+      "position:fixed",
+      "z-index:2147483646",
+      "left:640px",
+      "top:360px",
+      "width:22px",
+      "height:22px",
+      "margin:-2px 0 0 -2px",
+      "border-radius:50%",
+      "border:2px solid #f4efe8",
+      "background:rgba(244,239,232,.28)",
+      "box-shadow:0 0 0 1px rgba(20,17,14,.55), 0 8px 18px rgba(0,0,0,.35)",
+      "pointer-events:none",
+      "transition:left .08s linear, top .08s linear",
+    ].join(";");
+    document.documentElement.appendChild(c);
+    document.addEventListener(
+      "mousemove",
+      (e) => {
+        c.style.left = `${e.clientX}px`;
+        c.style.top = `${e.clientY}px`;
+      },
+      true,
+    );
+  });
+}
+
+async function jumpY(page, y) {
+  await page.evaluate((top) => {
+    window.scrollTo({ top, behavior: "instant" });
+  }, y);
+}
+
 async function smoothScroll(page, y, ms) {
-  const budget = Math.max(80, Math.min(ms, 1800));
+  const budget = Math.max(80, Math.min(ms, 3200));
   await page.evaluate(
     async ({ y, ms }) => {
       const start = window.scrollY;
@@ -197,11 +240,17 @@ async function swapFrame(page, url, needle, captionText) {
 async function hoverText(page, text) {
   const loc = page.getByText(text, { exact: false }).first();
   if ((await loc.count()) === 0) return;
+  const box = await loc.boundingBox().catch(() => null);
+  if (box) {
+    await move(page, box.x + box.width * 0.45, box.y + box.height * 0.55, 12);
+  }
   await loc.hover({ timeout: 2500 }).catch(() => {});
 }
 
-async function move(page, x, y, steps = 16) {
-  await page.mouse.move(x, y, { steps });
+async function move(_target, x, y, steps = 16) {
+  const host = filmPage ?? _target;
+  if (!host?.mouse) return;
+  await host.mouse.move(x, y, { steps });
 }
 
 async function breathe(page, ms, untilVoMs) {
@@ -371,6 +420,7 @@ async function main() {
   await context.addInitScript(darkInit);
 
   const page = await context.newPage();
+  filmPage = page;
   page.setDefaultTimeout(25000);
   page.setDefaultNavigationTimeout(30000);
 
@@ -379,52 +429,73 @@ async function main() {
   await page.evaluate(paintTitleOverlay);
   await sleep(page, TITLE_MS);
   await page.evaluate(() => document.getElementById("pl-title")?.remove());
+  await injectCursor(page);
   const actualTitleMs = TITLE_MS;
   voZero = Date.now();
   console.log("vo_zero", { actualTitleMs });
 
-  // 0:00–0:24 landing — listings should already have arrived under the title
+  // VO 0–8s / video ~3–11s — hero only, pointer + CTAs (never a freeze)
   await caption(page, "The problem");
   console.log("beat landing-problem", voNow());
-  await move(page, 300, 220, 18);
+  await waitText(page, "Already paid", 2500).catch(() => {});
+  await move(page, 260, 190, 16);
   await hoverText(page, "Browse marketplace");
-  await waitText(page, "Already paid", 12000).catch(() => {});
-  await breathe(page, 3500, BEATS.landingProblem);
+  await sleep(page, 280);
+  await hoverText(page, "Create a listing");
+  await move(page, 420, 300, 14);
+  await hoverText(page, "Already paid");
+  await breathe(page, 900, BEATS.landingProblem);
   await holdUntil(page, BEATS.landingProblem);
 
-  // 0:24–0:44 still landing — what Paidline is
+  // VO 8–16s / video ~11–19s — still landing, scroll + value props (clear jump ~15s)
   await caption(page, "What Paidline is");
   console.log("beat landing-product", voNow());
-  await hoverText(page, "Already paid");
-  await sleep(page, 800);
-  await move(page, 980, 280, 20);
-  await hoverText(page, "Live listings");
-  await breathe(page, 5000, BEATS.landingProduct);
+  await hoverText(page, "Anyone can buy it");
+  await smoothScroll(page, 260, 1200);
+  await move(page, 520, 400, 12);
+  await page.evaluate(() => document.getElementById("how")?.scrollIntoView({ behavior: "instant", block: "start" }));
+  await hoverText(page, "How it works");
+  await move(page, 300, 280, 10);
+  await hoverText(page, "Four steps. Then");
+  await breathe(page, 800, BEATS.landingProduct);
   await holdUntil(page, BEATS.landingProduct);
 
-  // 0:44–0:47 hover paid listing 9 + open cards
+  // VO 16–24s — board highlight, then leave the landing
   await caption(page, "Live board");
   console.log("beat landing-board", voNow());
+  await jumpY(page, 80);
+  await hoverText(page, "Live listings");
+  await sleep(page, 280);
   await hoverText(page, "Already paid");
-  await sleep(page, 600);
   const openCard = page.locator("a[href^='/pay/']").nth(1);
-  if ((await openCard.count()) > 0) await openCard.hover().catch(() => {});
-  else await move(page, 1000, 360, 14);
-  await hoverText(page, "live listing");
+  if ((await openCard.count()) > 0) {
+    const box = await openCard.boundingBox().catch(() => null);
+    if (box) await move(page, box.x + 80, box.y + 36, 14);
+    await openCard.hover().catch(() => {});
+  } else {
+    await move(page, 1020, 340, 14);
+  }
+  await breathe(page, 700, BEATS.landingBoard);
   await holdUntil(page, BEATS.landingBoard);
 
-  // ~0:47 / video ~0:50 — #how four steps
+  // VO ~24s / video ~27s — #how. Stay here through the four-steps paragraph.
   await caption(page, "Four steps");
   console.log("beat how", voNow());
   await page.evaluate(() => document.getElementById("how")?.scrollIntoView({ behavior: "instant", block: "start" }));
   await waitText(page, "Four steps");
   const stepNames = ["List", "Pay", "Prove", "Confirm"];
   for (const name of stepNames) {
-    if (remaining(BEATS.how) < 1000) break;
+    if (remaining(BEATS.how) < 1200) break;
     const step = page.locator("#how").getByRole("heading", { name, exact: true }).first();
-    if ((await step.count()) > 0) await step.hover().catch(() => {});
-    await sleep(page, Math.min(2200, Math.max(400, remaining(BEATS.how) / 5)));
+    if ((await step.count()) > 0) {
+      const box = await step.boundingBox().catch(() => null);
+      if (box) await move(page, box.x + 40, box.y + 16, 12);
+      await step.hover().catch(() => {});
+    }
+    await sleep(page, Math.min(2800, Math.max(500, remaining(BEATS.how) / 6)));
   }
+  await hoverText(page, "isPaid");
+  await breathe(page, 1600, BEATS.how);
   await holdUntil(page, BEATS.how);
 
   // checker — start marketplace fetch under this frame
@@ -484,9 +555,9 @@ async function main() {
   console.log("beat paid-preload", voNow());
   view = await revealFrame(page, paidId, "Get the work", "Paid · listing 9");
   console.log("beat paid-ready", voNow());
-  await holdUntil(page, 160_000);
+  await holdUntil(page, 154_000);
   await hoverText(view, "Amount");
-  await sleep(page, Math.min(2400, Math.max(400, remaining(BEATS.paid) / 3)));
+  await sleep(page, Math.min(1800, Math.max(400, remaining(BEATS.paid) / 3)));
   const work = view.getByText("Get the work").first();
   await work.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {});
   await work.hover().catch(() => {});
